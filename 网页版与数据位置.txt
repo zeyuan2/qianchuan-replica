@@ -1,0 +1,15 @@
+本机网页版：http://127.0.0.1:5173/offline-preview.html
+实时查询入口：http://127.0.0.1:5173/index.html
+
+双击“打开网页版.cmd”可启动只读服务并打开浏览器。Windows重启后需要重新打开。
+这是本机网址，只能在这台电脑访问；尚未发布公网。
+预览包含21条当天计划样本、指标选择器和已采集的部分计划详情。
+实时入口需要连接已登录目标账户的浏览器，才能每5分钟查询新数据。
+
+源码：D:\qianchuan-replica
+接口原始样本：D:\qianchuan-replica\data\captures\2026-10-01
+网页数据快照：D:\qianchuan-replica\data\snapshots\2026-10-01-preview.json
+测试用样本：D:\qianchuan-replica\fixtures
+运行日志及本机连接码：D:\qianchuan-replica\.runtime（Git忽略）
+
+未建立数据库；实时刷新结果不会自动写入上述快照文件。详见data/README.txt。

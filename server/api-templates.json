@@ -1,0 +1,475 @@
+{
+  "overviewConfig": {
+    "ModuleId": "7580267836992405542",
+    "FilterParams": {
+      "stat_cost_include_talent_roi": [
+        "1"
+      ],
+      "free_policy_upgrade_whitelist_text": [
+        "shop_estimated_comission_cost"
+      ],
+      "scene": [
+        "overview"
+      ],
+      "free_policy_upgrade_common": [
+        "1"
+      ],
+      "is_overall_roi": [
+        "1"
+      ]
+    }
+  },
+  "tableConfig": {
+    "ModuleId": "7580269471328141358",
+    "FilterParams": {
+      "free_policy_upgrade_common": [
+        "1"
+      ],
+      "free_policy_upgrade_whitelist_text": [
+        "shop_estimated_comission_cost"
+      ],
+      "grabFirstScreen": [
+        "0"
+      ],
+      "is_overall_roi": [
+        "1"
+      ],
+      "stat_cost_include_talent_roi": [
+        "1"
+      ],
+      "uniVersion": [
+        "2"
+      ]
+    }
+  },
+  "overview": {
+    "StartTime": "2026-10-01 00:00:00",
+    "EndTime": "2026-10-01 17:34:51",
+    "ComparisonParams": {
+      "RatioStartTime": "2026-09-30 00:00:00",
+      "RatioEndTime": "2026-09-30 17:34:51"
+    },
+    "refer": "ecp,7581691193493979186,7580267836992405542,overall_upgrade_promotion_post_overview_for_produc",
+    "DataSetKey": "overall_upgrade_promotion_post_overview_for_produc",
+    "Metrics": [
+      "total_prepay_and_pay_settle_overall_roi2_1h",
+      "total_order_settle_amount_for_roi2_1h",
+      "total_order_settle_count_for_roi2_1h",
+      "total_order_real_settle_amount_for_roi2_1h",
+      "total_refund_order_gmv_for_roi2_1h_rate",
+      "total_pay_order_gmv_include_coupon_for_roi2",
+      "stat_cost_for_overall_roi2",
+      "stat_cost_for_roi2",
+      "total_cost_per_pay_order_settle_for_overall_roi2_1h",
+      "shop_estimated_comission_cost"
+    ],
+    "Dimensions": [
+      "marketing_goal"
+    ],
+    "Filters": {
+      "ConditionRelationshipType": 1,
+      "Conditions": [
+        {
+          "Field": "advertiser_id",
+          "Operator": 7,
+          "Values": [
+            "1000000000000000"
+          ]
+        },
+        {
+          "Field": "pricing_category",
+          "Operator": 7,
+          "Values": [
+            "2"
+          ]
+        },
+        {
+          "Field": "marketing_goal",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "ecp_app_id",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "campaign_type",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "adlab_mode",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "adlab_scene_fork",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "is_overall_roi",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    "FilterParams": {
+      "promotion_overview": [
+        "1"
+      ]
+    },
+    "reqFrom": "uniDataOverview"
+  },
+  "trend": {
+    "StartTime": "2026-10-01 00:00:00",
+    "EndTime": "2026-10-01 17:34:51",
+    "refer": "ecp,7581691193493979186,7580267836992405542,overall_upgrade_promotion_post_overview_for_produc",
+    "DataSetKey": "overall_upgrade_promotion_post_overview_for_produc",
+    "Metrics": [
+      "total_prepay_and_pay_settle_overall_roi2_1h",
+      "total_order_settle_amount_for_roi2_1h",
+      "total_order_settle_count_for_roi2_1h",
+      "total_order_real_settle_amount_for_roi2_1h",
+      "total_refund_order_gmv_for_roi2_1h_rate",
+      "total_pay_order_gmv_include_coupon_for_roi2",
+      "stat_cost_for_overall_roi2",
+      "stat_cost_for_roi2",
+      "total_cost_per_pay_order_settle_for_overall_roi2_1h",
+      "shop_estimated_comission_cost"
+    ],
+    "Dimensions": [
+      "stat_time_hour"
+    ],
+    "Filters": {
+      "ConditionRelationshipType": 1,
+      "Conditions": [
+        {
+          "Field": "advertiser_id",
+          "Operator": 7,
+          "Values": [
+            "1000000000000000"
+          ]
+        },
+        {
+          "Field": "pricing_category",
+          "Operator": 7,
+          "Values": [
+            "2"
+          ]
+        },
+        {
+          "Field": "marketing_goal",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "ecp_app_id",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "campaign_type",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "adlab_mode",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "adlab_scene_fork",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "is_overall_roi",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    "OrderBy": [
+      {
+        "Type": 1,
+        "Field": "stat_time_hour"
+      }
+    ],
+    "FilterParams": {
+      "promotion_overview": [
+        "1"
+      ]
+    },
+    "reqFrom": "uniDataOverview_trend_today"
+  },
+  "comparisonTrend": {
+    "StartTime": "2026-09-30 00:00:00",
+    "EndTime": "2026-09-30 17:34:51",
+    "refer": "ecp,7581691193493979186,7580267836992405542,overall_upgrade_promotion_post_overview_for_produc",
+    "DataSetKey": "overall_upgrade_promotion_post_overview_for_produc",
+    "Metrics": [
+      "total_prepay_and_pay_settle_overall_roi2_1h",
+      "total_order_settle_amount_for_roi2_1h",
+      "total_order_settle_count_for_roi2_1h",
+      "total_order_real_settle_amount_for_roi2_1h",
+      "total_refund_order_gmv_for_roi2_1h_rate",
+      "total_pay_order_gmv_include_coupon_for_roi2",
+      "stat_cost_for_overall_roi2",
+      "stat_cost_for_roi2",
+      "total_cost_per_pay_order_settle_for_overall_roi2_1h",
+      "shop_estimated_comission_cost"
+    ],
+    "Dimensions": [
+      "stat_time_hour"
+    ],
+    "Filters": {
+      "ConditionRelationshipType": 1,
+      "Conditions": [
+        {
+          "Field": "advertiser_id",
+          "Operator": 7,
+          "Values": [
+            "1000000000000000"
+          ]
+        },
+        {
+          "Field": "pricing_category",
+          "Operator": 7,
+          "Values": [
+            "2"
+          ]
+        },
+        {
+          "Field": "marketing_goal",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "ecp_app_id",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "campaign_type",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "adlab_mode",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "adlab_scene_fork",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        },
+        {
+          "Field": "is_overall_roi",
+          "Operator": 7,
+          "Values": [
+            "1"
+          ]
+        }
+      ]
+    },
+    "OrderBy": [
+      {
+        "Type": 1,
+        "Field": "stat_time_hour"
+      }
+    ],
+    "FilterParams": {
+      "promotion_overview": [
+        "1"
+      ]
+    },
+    "reqFrom": "uniDataOverview_trend_yestoday"
+  },
+  "plans": {
+    "Params": {
+      "DiscardTotalNum": true,
+      "NeedRequestOptional": true,
+      "ListAdsModules": [
+        10,
+        4,
+        20
+      ],
+      "OrderBy": {
+        "Field": "create_time",
+        "Type": 2
+      },
+      "PageParams": {
+        "Page": 1,
+        "PageSize": 10
+      },
+      "AdFilter": {
+        "AdlabScene": 1,
+        "MarGoal": 1,
+        "SmartBidType": 0,
+        "DataTimeRange": {
+          "StartTime": "2026-10-01 00:00:00",
+          "EndTime": "2026-10-01 23:59:59"
+        },
+        "IsOverallRoi": 1,
+        "UniPromShopFilter": {
+          "UniPromShopView": 1
+        }
+      },
+      "Metrics": [
+        "total_prepay_and_pay_settle_overall_roi2_1h",
+        "total_prepay_and_pay_settle_overall_roi2_1h_primary",
+        "stat_cost_for_overall_roi2",
+        "stat_cost_for_overall_roi2_primary",
+        "stat_cost_for_roi2",
+        "stat_cost_for_roi2_primary",
+        "total_order_settle_amount_for_roi2_1h",
+        "total_order_settle_amount_for_roi2_1h_primary",
+        "total_order_settle_count_for_roi2_1h",
+        "total_order_settle_count_for_roi2_1h_primary",
+        "total_order_real_settle_amount_for_roi2_1h",
+        "total_order_real_settle_amount_for_roi2_1h_primary",
+        "total_refund_order_gmv_for_roi2_1h_rate",
+        "total_refund_order_gmv_for_roi2_1h_rate_primary",
+        "total_order_settle_amount_rate_for_roi2_1h",
+        "total_order_settle_amount_rate_for_roi2_1h_primary",
+        "total_pay_order_count_for_roi2",
+        "total_pay_order_count_for_roi2_primary",
+        "total_pay_order_gmv_include_coupon_for_roi2",
+        "total_pay_order_gmv_include_coupon_for_roi2_primary",
+        "total_pay_order_gmv_for_roi2",
+        "total_pay_order_gmv_for_roi2_primary",
+        "total_order_settle_amount_for_roi2_7d",
+        "total_order_settle_amount_for_roi2_7d_primary",
+        "total_cost_per_pay_order_settle_for_overall_roi2_1h",
+        "total_cost_per_pay_order_settle_for_overall_roi2_1h_primary",
+        "shop_estimated_comission_cost",
+        "shop_estimated_comission_cost_primary",
+        "total_cost_per_pay_order_for_roi2",
+        "total_cost_per_pay_order_for_roi2_primary"
+      ],
+      "SophonxDataSetKey": "overall_roi_promotion_list_for_product_v2",
+      "Dimensions": [
+        "dynamic_external_action"
+      ]
+    },
+    "UseNewChain": true
+  },
+  "summary": {
+    "DiscardTotalNum": true,
+    "NeedRequestOptional": true,
+    "Metrics": [
+      "total_prepay_and_pay_settle_overall_roi2_1h",
+      "total_prepay_and_pay_settle_overall_roi2_1h_primary",
+      "stat_cost_for_overall_roi2",
+      "stat_cost_for_overall_roi2_primary",
+      "stat_cost_for_roi2",
+      "stat_cost_for_roi2_primary",
+      "total_order_settle_amount_for_roi2_1h",
+      "total_order_settle_amount_for_roi2_1h_primary",
+      "total_order_settle_count_for_roi2_1h",
+      "total_order_settle_count_for_roi2_1h_primary",
+      "total_order_real_settle_amount_for_roi2_1h",
+      "total_order_real_settle_amount_for_roi2_1h_primary",
+      "total_refund_order_gmv_for_roi2_1h_rate",
+      "total_refund_order_gmv_for_roi2_1h_rate_primary",
+      "total_order_settle_amount_rate_for_roi2_1h",
+      "total_order_settle_amount_rate_for_roi2_1h_primary",
+      "total_pay_order_count_for_roi2",
+      "total_pay_order_count_for_roi2_primary",
+      "total_pay_order_gmv_include_coupon_for_roi2",
+      "total_pay_order_gmv_include_coupon_for_roi2_primary",
+      "total_pay_order_gmv_for_roi2",
+      "total_pay_order_gmv_for_roi2_primary",
+      "total_order_settle_amount_for_roi2_7d",
+      "total_order_settle_amount_for_roi2_7d_primary",
+      "total_cost_per_pay_order_settle_for_overall_roi2_1h",
+      "total_cost_per_pay_order_settle_for_overall_roi2_1h_primary",
+      "shop_estimated_comission_cost",
+      "shop_estimated_comission_cost_primary",
+      "total_cost_per_pay_order_for_roi2",
+      "total_cost_per_pay_order_for_roi2_primary"
+    ],
+    "SophonxDataSetKey": "overall_roi_promotion_list_for_product_v2",
+    "Dimensions": [
+      "dynamic_external_action"
+    ],
+    "AdFilter": {
+      "AdlabScene": 1,
+      "MarGoal": 1,
+      "SmartBidType": 0,
+      "IsOverallRoi": 1,
+      "UniPromShopFilter": {
+        "UniPromShopView": 1
+      },
+      "AdlabMode": 1,
+      "StartTime": "2026-10-01 00:00:00",
+      "EndTime": "2026-10-01 23:59:59"
+    }
+  },
+  "optional": {
+    "SessionId": "",
+    "SessionID": "",
+    "ListAdsModules": [
+      22,
+      29,
+      34,
+      36,
+      9,
+      7,
+      8,
+      16,
+      14,
+      17,
+      25,
+      26,
+      21,
+      38,
+      40,
+      42,
+      43,
+      37,
+      41,
+      55,
+      53,
+      30,
+      56
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+.runtime/
+*.log
+
+# Local account exports
+data/captures/
+data/snapshots/
+data/monitor/
+
+node_modules/
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.pfx
+*.zip
+
+# Never commit any runtime or capture directory.
+data/
+*.jsonl
+*.dmp
+*.har
+*.p12
+*.p7b

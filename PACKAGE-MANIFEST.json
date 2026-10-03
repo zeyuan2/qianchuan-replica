@@ -1,0 +1,541 @@
+{
+  "algorithm": "SHA-256",
+  "note": "Manifest excludes itself. Git commit identifies the complete baseline.",
+  "files": [
+    {
+      "path": ".gitattributes",
+      "bytes": 87,
+      "sha256": "53f6d4cb069cb281479675318f20ae067bfdce012601309e945237227f9ee1c5"
+    },
+    {
+      "path": ".gitignore",
+      "bytes": 263,
+      "sha256": "d3ba74615ce6867b645e4ffbe89d5161e443966302eb1166ba162f8b51e28bb6"
+    },
+    {
+      "path": "bridge-extension/background.js",
+      "bytes": 4237,
+      "sha256": "a73664d8bceb16636dce2f49e6653e56fe5dcce83aa0afd7a6adbd6fa04e4b7f"
+    },
+    {
+      "path": "bridge-extension/connect-page.js",
+      "bytes": 1590,
+      "sha256": "e7e7b48f85cb34a74c14346aa0e75d6e1a5218ccfb27e344241536f3bcff6f99"
+    },
+    {
+      "path": "bridge-extension/manifest.json",
+      "bytes": 775,
+      "sha256": "a36a65774dc85669fcae2e9e7552561868fd3b22d670d4033b22459457e0894f"
+    },
+    {
+      "path": "bridge-extension/pairing.mjs",
+      "bytes": 626,
+      "sha256": "f66cdb4011a38778972b6580430b4a65c3e1bd80131f44ee7f3ab1001eb9ab7d"
+    },
+    {
+      "path": "bridge-extension/popup.html",
+      "bytes": 705,
+      "sha256": "967710c14c89952cfc51bacb636e8397cf8eabc4b21f58aee488149691cb5ecb"
+    },
+    {
+      "path": "bridge-extension/popup.js",
+      "bytes": 764,
+      "sha256": "6d20cb1249b4628fc03defd42bad060ac72b99eb86176742764bc4b678a7707d"
+    },
+    {
+      "path": "bridge-extension/write-policy.mjs",
+      "bytes": 1209,
+      "sha256": "b140bc6a68ee289605b0ccc72097b4a3f333dc996e795d1d24ea25f038cc826e"
+    },
+    {
+      "path": "bridge-extension/使用说明.txt",
+      "bytes": 592,
+      "sha256": "c1bc91a7a26fa7b9be0ec3ea8f6dcd4a2d83c78d402039449e412f710c380894"
+    },
+    {
+      "path": "config-examples/budget-alerts.example.json",
+      "bytes": 63,
+      "sha256": "a7645299a9c1cdb278f6b6488f46a114c3f77ac04b243582dccb89e846707e80"
+    },
+    {
+      "path": "config-examples/public-access.example.json",
+      "bytes": 179,
+      "sha256": "606556c681836cf0563d7829fef4a7e8ece5542b8fa8895ecedf3831a6ee1e22"
+    },
+    {
+      "path": "config-examples/README.md",
+      "bytes": 766,
+      "sha256": "e1dae6291d6d5c1c82a1385a2ee4cd0a169f2287f1241fc9559e190089ec145d"
+    },
+    {
+      "path": "config-examples/tunnel-token.example.txt",
+      "bytes": 44,
+      "sha256": "0a1c36f3cb8882edc67ab49b821b41b7270ddaab5dd47243f4ab63a870081384"
+    },
+    {
+      "path": "dist/app.js",
+      "bytes": 15285,
+      "sha256": "c881d802daf82851ec80151e02655d03a9ccc1da89f0bc8f39b266dcb3be3f67"
+    },
+    {
+      "path": "dist/assets/favicon.svg",
+      "bytes": 302,
+      "sha256": "48f151cb989d385c778e8e4ab6ac0a609c15a3995899060471eedb7d559ba9c7"
+    },
+    {
+      "path": "dist/assets/placeholder.svg",
+      "bytes": 228,
+      "sha256": "187d92dff4640be9451df52da929eb970334614e30f6a701739566a4d2b2a067"
+    },
+    {
+      "path": "dist/batch-boost.mjs",
+      "bytes": 13970,
+      "sha256": "634cc677e2b2fa57851c7a91af78638daa9b58ea433fdbddcb78457a9dcc88de"
+    },
+    {
+      "path": "dist/batch-model.mjs",
+      "bytes": 1436,
+      "sha256": "fabfa6b619178d3f29bd6c6b6594d67ee4b0acfe4223c855a3fe768f2fe332bf"
+    },
+    {
+      "path": "dist/connect.html",
+      "bytes": 6764,
+      "sha256": "cb5ad559b8193c8b4a5f2f45db2ab2575265fc1f07e578dd177ffba8cccb80cb"
+    },
+    {
+      "path": "dist/external-connect.html",
+      "bytes": 2370,
+      "sha256": "06693dc752441ab8c8134cd61e61256ebedd60f3e00e8fdf70bd7842b0ab17ad"
+    },
+    {
+      "path": "dist/index.html",
+      "bytes": 8666,
+      "sha256": "9a43476c32715854ed11710e703f56ea62e9799f294a0327ed44d17cf66ee0da"
+    },
+    {
+      "path": "dist/lan-data.mjs",
+      "bytes": 4954,
+      "sha256": "45d477f885a505aceabec3549c2dc20497ec4c5dff93022ade8be52f14dc0255"
+    },
+    {
+      "path": "dist/lan-main.mjs",
+      "bytes": 29357,
+      "sha256": "2428ee44c51ccd1848e5e15d77cac88d6dddd6c4702e80c1928b20e599214d09"
+    },
+    {
+      "path": "dist/lan-operations-ui.mjs",
+      "bytes": 3725,
+      "sha256": "7b14f568d51c178b8fe2134743cb87eee5b89a33a2381f59570305bc2d1cfc80"
+    },
+    {
+      "path": "dist/lan-plan-detail.mjs",
+      "bytes": 8825,
+      "sha256": "e3786aa373af627adbd2afd72082e5ccbd3c8b71e7344c54f3dce6b595678077"
+    },
+    {
+      "path": "dist/lan-task-ui.mjs",
+      "bytes": 6293,
+      "sha256": "7502f810a208693cc1ddfadbc0d4b2597887ccfa041e8de36f960adb7f404791"
+    },
+    {
+      "path": "dist/lan.css",
+      "bytes": 22469,
+      "sha256": "aadd40fbebfda9fe2cba5bfd6eed6251e897c3accbcf5ea4c1161adc95771e0a"
+    },
+    {
+      "path": "dist/lan.html",
+      "bytes": 10844,
+      "sha256": "5e21f3e0cc93ef10629f6b9e9af46d8b96c54cbab94371016ef8597c447b602d"
+    },
+    {
+      "path": "dist/live.css",
+      "bytes": 4499,
+      "sha256": "1895275e2fa33650d8f8395016c9307d7dc2c4e9e33168a147f98bcfbb63acea"
+    },
+    {
+      "path": "dist/main.mjs",
+      "bytes": 15832,
+      "sha256": "9ae2d1ec7e24dcb274ca313e3c07e38c6b79fe0328356e729d7dd14841929668"
+    },
+    {
+      "path": "dist/metric-config.mjs",
+      "bytes": 2585,
+      "sha256": "2df6995a6cf883d571b91cf3d6c58a7b2002e4beaa25b31074c17f2e35b56cd9"
+    },
+    {
+      "path": "dist/metric-picker.css",
+      "bytes": 4690,
+      "sha256": "5efaf86820dbd992fa6f726f872075dad6c0ff71d2dfb3616684a6df64bcff9c"
+    },
+    {
+      "path": "dist/metric-picker.mjs",
+      "bytes": 8494,
+      "sha256": "b3a1226664578e90fd2a0698c1d10bd879fca751219bffa45cd2868289340eb9"
+    },
+    {
+      "path": "dist/notifications.html",
+      "bytes": 4121,
+      "sha256": "c36ae0e505e493912af0758364c70eec1df01d2cdc8738b4375c850a33a52253"
+    },
+    {
+      "path": "dist/notifications.mjs",
+      "bytes": 2861,
+      "sha256": "d9930f38844040fbea51ba4e0014738e0a4fe82a2111521cfb910dec7eaa30ba"
+    },
+    {
+      "path": "dist/offline-preview.html",
+      "bytes": 192,
+      "sha256": "ee95c12907ef99ee7723f89cb1c5b0bf6a2e9f5607fb9db7d6495b64fae9781b"
+    },
+    {
+      "path": "dist/operations-ui.mjs",
+      "bytes": 3717,
+      "sha256": "f5ed64f846dec1cd11475fd8865f8da11bf04d8866e8ed7f3f2a99267f115c4f"
+    },
+    {
+      "path": "dist/operator-ui.mjs",
+      "bytes": 4047,
+      "sha256": "8279baff006428fd26dbace8ef2db94623c9fb9b2c5942948a77ba6faab47809"
+    },
+    {
+      "path": "dist/plan-detail.mjs",
+      "bytes": 8731,
+      "sha256": "22e42a7a8634ddf4fe8caae0d20a9c8a6c7e8a72a79501e505d29af1b542fed1"
+    },
+    {
+      "path": "dist/poller.mjs",
+      "bytes": 2409,
+      "sha256": "296f9363ce411a1342b143376f367a90414a6406bf25a2829babdad702c6b63a"
+    },
+    {
+      "path": "dist/preferences.mjs",
+      "bytes": 1376,
+      "sha256": "99d5f40bbdc600df9f446bf9e0130c90f404f146ca5a9d71e13461b68ef2becb"
+    },
+    {
+      "path": "dist/scope.css",
+      "bytes": 2253,
+      "sha256": "43100d6326013e5a21e9adbf6bb9e75bc77219f9b840e6093f8533b27c3e99ca"
+    },
+    {
+      "path": "dist/selection-state.mjs",
+      "bytes": 1134,
+      "sha256": "434cca728172e88ec30afb88cce116a5b691ea0cea0a418a3eb74c55ce8fb9d2"
+    },
+    {
+      "path": "dist/styles.css",
+      "bytes": 14854,
+      "sha256": "db1456dbdd79c253d85804ec5fac0e94af0284f855be54d42711cc119f741c08"
+    },
+    {
+      "path": "dist/table-metric-catalog.mjs",
+      "bytes": 13609,
+      "sha256": "9f15c57e0c04e65bc9ca74a9f28eccbc39001c22c74dc5d740031151713ae399"
+    },
+    {
+      "path": "dist/task-ui.mjs",
+      "bytes": 6268,
+      "sha256": "7d8a03d612e4c06ee2452542651b691fa8ec19eb5307da59f23c7c41076f13b8"
+    },
+    {
+      "path": "dist/top-metric-catalog.mjs",
+      "bytes": 13291,
+      "sha256": "18750a66826215fc68aaae41ab72a17490b3d8bae44af67bffd97d3025068ffc"
+    },
+    {
+      "path": "enable-lan-firewall.ps1",
+      "bytes": 1865,
+      "sha256": "0ec956cec53fef93ca0cf6f65cf1e58a53183c4f0eb9ef733ebd090fc2fa56b7"
+    },
+    {
+      "path": "fixtures/035-getUserConfAndDataSet.response.json",
+      "bytes": 11875,
+      "sha256": "4059bab69bc790c54a7e594776a5a5793effa034996afc5ba77b9ea38658c371"
+    },
+    {
+      "path": "fixtures/037-getUserConfAndDataSet.response.json",
+      "bytes": 12467,
+      "sha256": "f508031d64a48468a85e070d24ba80f6e7499d700ad678594ea6a09aa65b125e"
+    },
+    {
+      "path": "fixtures/045-statQuery.response.json",
+      "bytes": 5067,
+      "sha256": "7e5c3b2f9219696ffea7abf8d71bbb7859bf9f2d93ada8e55b648e54b0b329cc"
+    },
+    {
+      "path": "fixtures/046-statQuery.response.json",
+      "bytes": 10931,
+      "sha256": "5d75a7ea781463acc65841839d3b838351cb689641f641288cb90e5063cae6fd"
+    },
+    {
+      "path": "fixtures/049-list-required.response.json",
+      "bytes": 8434,
+      "sha256": "863b7b78a31e3f85c6cf09aca5a6a70caebcfc1bade18b0122e763a929b77957"
+    },
+    {
+      "path": "fixtures/050-list-summary.response.json",
+      "bytes": 255,
+      "sha256": "ff895f0b4e6ef29f54f49c750d90b5ab6ff30da6d097543ca0b43ae8712f0363"
+    },
+    {
+      "path": "fixtures/051-list-optional.response.json",
+      "bytes": 155,
+      "sha256": "ed0044e25f05be65e782cf44381ae404bc50cef5747d38d286aa516d4c0dba2b"
+    },
+    {
+      "path": "fixtures/README.md",
+      "bytes": 336,
+      "sha256": "aaed06b950542ffdb0f01d4e8f41de6b561734f9b9a606473f6b4701ae1b806c"
+    },
+    {
+      "path": "GITHUB-BASELINE.md",
+      "bytes": 1346,
+      "sha256": "fdda0104b1e657f90c058281de4f1ea75964ea7d3ff4829ee0ab705346eb00e2"
+    },
+    {
+      "path": "HANDOFF-METADATA.json",
+      "bytes": 1697,
+      "sha256": "0138567144dc0ede9ba1370f62b9a1678d2ba96560b38e297c1dad1f2550264f"
+    },
+    {
+      "path": "lan-server.mjs",
+      "bytes": 9774,
+      "sha256": "25ee260b7884f0eb41e30d8c2790a5b46d3482d339432de9ce26ac70628e8c3b"
+    },
+    {
+      "path": "PACKAGE-EXCLUSIONS.json",
+      "bytes": 578,
+      "sha256": "757e84e472ce26f8fafd09937f6254190480cdf1b78e575af586e5cdd66599d3"
+    },
+    {
+      "path": "package-lock.json",
+      "bytes": 279,
+      "sha256": "673971b718ed4093261173624d02da2d9071e870e94835cc07b2e20ce2f22e2f"
+    },
+    {
+      "path": "package.json",
+      "bytes": 337,
+      "sha256": "0d1f6d224aecc30d3c6f67682d5462c2af78b0bbdd10a1f7d389235f5ed5cf25"
+    },
+    {
+      "path": "public-server.mjs",
+      "bytes": 2367,
+      "sha256": "e4c0fc8f851caa859e8514e6efc5fc704c28e2af19b2459173c734106ee7b064"
+    },
+    {
+      "path": "README.md",
+      "bytes": 11976,
+      "sha256": "cbf880598efab97b0ddc51e625181c6ae8c9c7649607fefa11ab3fec11ad4384"
+    },
+    {
+      "path": "scripts/build-lan.mjs",
+      "bytes": 15788,
+      "sha256": "564850ab993616bee53e1280ecd8734a2b25b168419d3ebc1be3f29ef27d481f"
+    },
+    {
+      "path": "scripts/generate-synthetic-fixtures.mjs",
+      "bytes": 2880,
+      "sha256": "81fe195b4d30fe9a5feb2175803e44678f609ec1e426be665a905f4dbd0d5007"
+    },
+    {
+      "path": "scripts/lan-interface.js",
+      "bytes": 8659,
+      "sha256": "245f40a81ec7dc68bd66206477b4380cd5aaf0447d6b36488b82cebc138cc0f8"
+    },
+    {
+      "path": "serve.mjs",
+      "bytes": 15636,
+      "sha256": "d5d17cd363841890874ddf0862916c66a7c0fe54f01ce6b0181d840d5f844299"
+    },
+    {
+      "path": "server/api-templates.json",
+      "bytes": 12191,
+      "sha256": "78fb470e80516dc294642f5b60b22517ba94cbb3649e565410669c7df565ab57"
+    },
+    {
+      "path": "server/api.mjs",
+      "bytes": 11534,
+      "sha256": "076d571d5855077cb5ea197cd0a445162113a9eb3387906524c63a4ec708eff8"
+    },
+    {
+      "path": "server/batch-boost.mjs",
+      "bytes": 6486,
+      "sha256": "e9f6d73c56a5c4aabdbf011d4c8f46820b070524839b236cfa164d791978e0bc"
+    },
+    {
+      "path": "server/bridge.mjs",
+      "bytes": 3429,
+      "sha256": "3f8426e179a0ed7e40ac95f9b35c06c1651e59c9a17f0a49e36d8d6591f32746"
+    },
+    {
+      "path": "server/budget-alerts.mjs",
+      "bytes": 9716,
+      "sha256": "ec15471ca7cd2f67d8449896bb7fa3f9ad7bd1e254affe38d3c1d155fd9294f9"
+    },
+    {
+      "path": "server/cloudflare-access.mjs",
+      "bytes": 2385,
+      "sha256": "3a354fa56adfc6a61877aa27c596acd20601f169daadb743df14e9361751a4d5"
+    },
+    {
+      "path": "server/detail-templates.json",
+      "bytes": 28156,
+      "sha256": "af8fa9f58f0c1d93d164195f20485485cf1e60a31a83c76fb61caafea46e00cd"
+    },
+    {
+      "path": "server/details.mjs",
+      "bytes": 9236,
+      "sha256": "ac6f6e830ddc303c9cb47c424b893b7e8212aba3ba2d8ecfd2b5c34987cbd213"
+    },
+    {
+      "path": "server/full-capture.mjs",
+      "bytes": 5076,
+      "sha256": "4670ea1fb2c6a93bedde63bf6911ae78ed5f75ded7a18f933056a277ad1c39fd"
+    },
+    {
+      "path": "server/monitor.mjs",
+      "bytes": 7134,
+      "sha256": "5aedb4d6a7a149c2577fa971419531f6cc7ba18a228c746ba94ead7004e2edcc"
+    },
+    {
+      "path": "server/operations.mjs",
+      "bytes": 6941,
+      "sha256": "9f45fd5376db959eb2de9e0d2b47adb18da43579cc4d5ada4b5612d41ae3051d"
+    },
+    {
+      "path": "server/operator-access.mjs",
+      "bytes": 3333,
+      "sha256": "e30c656be2179dfb50860dad997ab2876847fcb015efc90f405ad39434415e3a"
+    },
+    {
+      "path": "server/range-query.mjs",
+      "bytes": 3192,
+      "sha256": "ab07c4a684d6e011be921f073d82cc9497db8e37004888dd53bc734b2bb1beee"
+    },
+    {
+      "path": "server/tasks.mjs",
+      "bytes": 2779,
+      "sha256": "90b99446d668fce393690c3fd8bdafc725e69478b7d0d3fc0985c4ee32dc0e30"
+    },
+    {
+      "path": "server/tunnel-token.mjs",
+      "bytes": 750,
+      "sha256": "ef82ed611a66fda54a648eacb681b6dd7359441f4e1adc8fd82a448e14ac61fc"
+    },
+    {
+      "path": "SOURCE-FINGERPRINTS.json",
+      "bytes": 8074,
+      "sha256": "6fd916226092e91c8b7b5579562488e6de3ac84f073a7e9832a86e6f38aeec0a"
+    },
+    {
+      "path": "start-lan.ps1",
+      "bytes": 4577,
+      "sha256": "ebda5c2e6bc9c48d836c48bacf78d7908518d9ed28830162de07c84d30a48d3b"
+    },
+    {
+      "path": "start-public.ps1",
+      "bytes": 2661,
+      "sha256": "07da4742fc170c14532f109c3aa5eb734322a01e5431ae203fc4b060ecbdef1d"
+    },
+    {
+      "path": "start-web.ps1",
+      "bytes": 1421,
+      "sha256": "4f055ac316d263cafd31307c01f2125830ceb991c4c693479d50ec4e74f205b2"
+    },
+    {
+      "path": "tests/api.test.mjs",
+      "bytes": 6501,
+      "sha256": "49798d92d360f40f7a5180ab95affa8d58fc0dde3b704a4668d35b5f13d39b55"
+    },
+    {
+      "path": "tests/batch-boost.test.mjs",
+      "bytes": 4923,
+      "sha256": "e8ad9ed1b4ae771364b04b1b4f9a40aebeb0262cd6efa5eb6e4e81c5e02e2c7c"
+    },
+    {
+      "path": "tests/budget-alerts.test.mjs",
+      "bytes": 5753,
+      "sha256": "b9ad2154929013582bc03cf9dbfa0846fcdcb296bbcdb2a9982a8c09496aa49b"
+    },
+    {
+      "path": "tests/extension-pairing.test.mjs",
+      "bytes": 1034,
+      "sha256": "6cd152a8a17a37a227b65734011393092b7b3de5b145729327da1805dfcc5505"
+    },
+    {
+      "path": "tests/lan-server.test.mjs",
+      "bytes": 4852,
+      "sha256": "5be2475fced145e41e378e1317780da3461c937265b863166fe4a2e4ce623d2e"
+    },
+    {
+      "path": "tests/monitor.test.mjs",
+      "bytes": 9393,
+      "sha256": "56a579d69d9eb551ffe475f5ce8abbb223457afecbbc8400c4920260fa3c514f"
+    },
+    {
+      "path": "tests/operator-range.test.mjs",
+      "bytes": 6861,
+      "sha256": "ea4f9cea88128c71bd02210d00bfaff380fba3e8f94ff9b99a5ea2014551ec22"
+    },
+    {
+      "path": "tests/poller.test.mjs",
+      "bytes": 2266,
+      "sha256": "83a307e9269e5a9a91a7ecc5ae5aaa91bb428725a887bbf13224eb814af1b3b3"
+    },
+    {
+      "path": "tests/preferences.test.mjs",
+      "bytes": 1184,
+      "sha256": "1b3963d8b6c5fc95bf96e9f6d374da03283158ae11d0842c7fa7d1fcff42a089"
+    },
+    {
+      "path": "tests/public-access.test.mjs",
+      "bytes": 4385,
+      "sha256": "f1430cc38f8adbfc007bd41877b6806d9d46f735b04e9b78d7fd5011ea87f37c"
+    },
+    {
+      "path": "交接说明.md",
+      "bytes": 11908,
+      "sha256": "79f9296d5453c3df7e4d98e6c771472d97d83087a26cedac006f930d763cded2"
+    },
+    {
+      "path": "内网部署说明.txt",
+      "bytes": 1394,
+      "sha256": "6cc620d775109e31da36cbc55c327828e8d3029caa416540e25c0b7790817b91"
+    },
+    {
+      "path": "启动.cmd",
+      "bytes": 417,
+      "sha256": "6e7c2fe6240da4cede9047ec29fdbca75cdd2dac4b59ac8f18326cbc78831612"
+    },
+    {
+      "path": "打开内网网页版.cmd",
+      "bytes": 125,
+      "sha256": "5feeb223a14f7b55803df12fe3d123fb0bee4f7e02557427560dc2755bd402c3"
+    },
+    {
+      "path": "打开外网网页版.cmd",
+      "bytes": 96,
+      "sha256": "58444266f66f40a9228aae05f542198a254cd3bdd7418cf23e591f6c4d2e7b51"
+    },
+    {
+      "path": "打开网页版.cmd",
+      "bytes": 133,
+      "sha256": "10e5995bc645fe62021be2d9971bddd8a29ade52a77c4c6a50f2533259ecbb7d"
+    },
+    {
+      "path": "接口核查记录.md",
+      "bytes": 3184,
+      "sha256": "8da26a118a14e81f9c19789f467d888a338498309899cf85f7716575d2e8bf86"
+    },
+    {
+      "path": "网页版与数据位置.txt",
+      "bytes": 909,
+      "sha256": "90b2616e3edfb4362148e75bf80818a5c8dfc5e2aa3c435caab68a80a9cc19f3"
+    },
+    {
+      "path": "验证结果.json",
+      "bytes": 1319,
+      "sha256": "db101496df5016e65dcb4ff8545416c1d581707041a9a58cfa663a1173a1c2ad"
+    }
+  ]
+}

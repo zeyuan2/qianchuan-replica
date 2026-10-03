@@ -1,0 +1,9 @@
+{
+  "status_code": 0,
+  "message": "SYNTHETIC TEST DATA",
+  "data": {
+    "adGoodsMap": {},
+    "adId2PairsMap": {},
+    "adShowMaterialInfoMap": {}
+  }
+}

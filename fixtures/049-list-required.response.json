@@ -1,0 +1,345 @@
+{
+  "status_code": 0,
+  "message": "SYNTHETIC TEST DATA",
+  "data": {
+    "adInfos": [
+      {
+        "id": "1000000000000100",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 1",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000101",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 2",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000102",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 3",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000103",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 4",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000104",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 5",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000105",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 6",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000106",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 7",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000107",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 8",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000108",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 9",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      },
+      {
+        "id": "1000000000000109",
+        "advId": "1000000000000000",
+        "marGoal": 1,
+        "name": "人工样例计划 10",
+        "adDeliveryName": "投放中",
+        "adOptType": 0,
+        "budget": "30000000",
+        "ecpRoi2Goal": 2,
+        "budgetMode": 1,
+        "modifyTime": "1",
+        "createTime": "1",
+        "overallRoiCostItems": [],
+        "operation": {
+          "budgetEditOperation": {
+            "editable": true
+          },
+          "roi2GoalOperation": {
+            "editable": true
+          },
+          "optStatusOperation": {
+            "editable": true
+          }
+        }
+      }
+    ],
+    "adStatsMap": {
+      "1000000000000100": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000101": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000102": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000103": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000104": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000105": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000106": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000107": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000108": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      },
+      "1000000000000109": {
+        "metrics": {
+          "statCostForRoi2Primary": {
+            "value": 240,
+            "valueStr": "240.00"
+          }
+        }
+      }
+    },
+    "pagination": {
+      "page": 1,
+      "pageSize": 10
+    },
+    "sessionId": "synthetic-query-session"
+  }
+}

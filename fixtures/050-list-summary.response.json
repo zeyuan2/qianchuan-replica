@@ -1,0 +1,15 @@
+{
+  "status_code": 0,
+  "message": "SYNTHETIC TEST DATA",
+  "data": {
+    "totalNum": 132,
+    "totalMetrics": {
+      "metrics": {
+        "statCostForRoi2Primary": {
+          "value": 2400,
+          "valueStr": "2400.00"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "origin": "https://qc.example.com",
+  "team": "example-team",
+  "audience": "REPLACE_WITH_YOUR_ACCESS_APPLICATION_AUD",
+  "emails": [
+    "operator@example.com"
+  ]
+}

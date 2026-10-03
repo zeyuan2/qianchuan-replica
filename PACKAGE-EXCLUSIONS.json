@@ -1,0 +1,17 @@
+{
+  "excludedTopLevel": [
+    ".git/",
+    ".runtime/",
+    "data/",
+    "node_modules/"
+  ],
+  "otherExcluded": [
+    "original fixtures/*.response.json",
+    "tests/*live*.json and other recorded verification JSON",
+    "all account screenshots",
+    "historical standalone 千川商品预览.html",
+    "original dist/offline-preview.html (replaced by notice)",
+    "内网访问地址.txt (machine-specific generated URL)"
+  ],
+  "syntheticReplacement": "fixtures are regenerated only from metric schema plus invented values; no captured response copied"
+}

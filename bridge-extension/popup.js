@@ -1,0 +1,3 @@
+const $=id=>document.getElementById(id);chrome.storage.local.get(['url','token','enabled','error'],c=>{$('url').value=c.url||'http://127.0.0.1:5173';$('token').value=c.token||'';$('status').textContent=c.error||(c.enabled?'连接已开启':'尚未连接');});
+$('connect').onclick=async()=>{const url=$('url').value.replace(/\/$/,''),token=$('token').value.trim();if(!/^http:\/\/127\.0\.0\.1:\d+$/.test(url)||!token){$('status').textContent='请填写正确的本机地址和连接码';return;}await chrome.storage.local.set({url,token,enabled:true});chrome.runtime.sendMessage({action:'connect'});$('status').textContent='正在连接…';};
+$('disconnect').onclick=async()=>{await chrome.storage.local.set({enabled:false});$('status').textContent='已断开';};

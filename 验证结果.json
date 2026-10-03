@@ -1,0 +1,42 @@
+{
+  "date": "2026-10-03",
+  "build": "npm run build:lan passed",
+  "tests": {
+    "total": 46,
+    "passed": 46,
+    "failed": 0,
+    "data": "synthetic only"
+  },
+  "isolatedStartup": {
+    "passed": true,
+    "homepageStatus": 200,
+    "mode": "REPLICA_REPLAY=1",
+    "writesEnabled": false,
+    "port": "OS-assigned temporary loopback port",
+    "processStopped": true
+  },
+  "sanitization": {
+    "knownRuntimeCredentialMatches": 0,
+    "originalAccountEmailDomainMatches": 0,
+    "originalDataFilesCopied": 0,
+    "allFixtureResponsesGenerated": true,
+    "testPrivateKeys": "generated in memory at test time; none saved",
+    "originalSourceHashChanges": 0
+  },
+  "limitations": [
+    "No production services restarted or configuration changed",
+    "No actual upstream writes or test notifications sent",
+    "New-machine live login and Cloudflare deployment not performed",
+    "Node >=20 compatibility not exhaustively tested"
+  ],
+  "githubBaselineRevalidation": {
+    "date": "2026-10-03",
+    "npmCi": "passed offline, scripts disabled",
+    "build": "passed",
+    "testsPassed": 46,
+    "testsFailed": 0,
+    "isolatedStartup": "passed, loopback random port, replay mode, child stopped",
+    "knownCredentialMatches": 0,
+    "productionSourceHashChanges": 0
+  }
+}
