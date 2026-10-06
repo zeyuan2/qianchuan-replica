@@ -31,7 +31,7 @@ export class ProductMonitor {
   this.status.lastAttemptAt=attempt.startedAt;this.status.nextCaptureAt=new Date(begin+this.interval).toISOString();
   try{
    if(!this.api.bridge.status().connected){this.status.phase='waiting';this.status.error={code:'BRIDGE_OFFLINE',message:'采集连接未接通，请在采集电脑保持Chrome登录并连接只读扩展'};attempt.outcome='waiting';return this.view();}
-   this.status.phase='collecting';this.status.error=null;
+   this.status.phase='collecting'; // Keep the last failure until a complete capture actually succeeds.
    const snapshot=await this.collect(this.api,{day:attempt.day,onProgress:p=>this.status.progress=p});
    if(!snapshot.complete||snapshot.accountId!==ACCOUNT_ID||snapshot.plans.length!==snapshot.total||new Set(snapshot.plans.map(p=>p.id)).size!==snapshot.total)throw Object.assign(new Error('采集结果未完整，拒绝覆盖上次数据'),{code:'INCOMPLETE_CAPTURE'});
    const established=Boolean(this.packet?.baselineEstablished),seen={...(this.packet?.seen||{})},events=[...(this.packet?.events||[])];

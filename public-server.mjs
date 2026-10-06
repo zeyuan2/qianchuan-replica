@@ -3,7 +3,7 @@ import {createLanServer} from './lan-server.mjs';
 import {CloudflareAccess} from './server/cloudflare-access.mjs';
 const config=JSON.parse(await readFile(new URL('./.runtime/public-access.json',import.meta.url),'utf8'));
 const access=new CloudflareAccess(config),assets=new Map();
-const files=['lan-main.mjs','batch-boost.mjs','batch-model.mjs','lan-data.mjs','lan-plan-detail.mjs','lan-operations-ui.mjs','lan-task-ui.mjs','operator-ui.mjs','metric-picker.mjs','metric-config.mjs','selection-state.mjs','preferences.mjs','top-metric-catalog.mjs','table-metric-catalog.mjs','operations-ui.mjs','task-ui.mjs','poller.mjs','styles.css','scope.css','metric-picker.css','live.css','lan.css','assets/favicon.svg'];
+const files=['health-client.js','lan-main.mjs','batch-boost.mjs','batch-model.mjs','lan-data.mjs','lan-plan-detail.mjs','lan-operations-ui.mjs','lan-task-ui.mjs','operator-ui.mjs','metric-picker.mjs','metric-config.mjs','selection-state.mjs','preferences.mjs','top-metric-catalog.mjs','table-metric-catalog.mjs','operations-ui.mjs','task-ui.mjs','poller.mjs','styles.css','scope.css','metric-picker.css','live.css','lan.css','assets/favicon.svg'];
 for(const file of files){const body=await readFile(new URL('./dist/'+file,import.meta.url));assets.set('/'+file,{body,type:file.endsWith('.css')?'text/css; charset=utf-8':file.endsWith('.svg')?'image/svg+xml':'text/javascript; charset=utf-8'});}
 const html=await readFile(new URL('./dist/lan.html',import.meta.url));
 const proxy=async(endpoint,options)=>{

@@ -53,10 +53,10 @@ export async function commitOperation(api,q,actorId){
  if(q.accountId!==ACCOUNT_ID||q.planId!==action.id||q.confirmed!==true)throw new BridgeError('确认信息不匹配','CONFIRMATION_REQUIRED',400);
  if(action.action==='delete'&&q.typedPlanId!==action.id)throw new BridgeError('请正确输入计划ID以确认删除','CONFIRMATION_REQUIRED',400);
  api.confirmations.delete(q.token);
- const {ad}=await planInfo(api,action.id,true);
- if(ad.modifyTime!==action.modifyTime)throw new BridgeError('计划已在其他页面变更，请重新查看后再操作','PLAN_CHANGED',409);
+ let ad;try{({ad}=await planInfo(api,action.id,true));}catch(e){throw Object.assign(e,{writeAttempted:false});}
+ if(ad.modifyTime!==action.modifyTime)throw Object.assign(new BridgeError('计划已在其他页面变更，请重新查看后再操作','PLAN_CHANGED',409),{writeAttempted:false});
  if(action.action!=='task')buildOperation(action.action,ad,action.after);
- let response;try{response=await api.call(action.path,action.body,{intent:'write',reqFrom:'replica_product_confirmed_operation'});}catch(error){throw new BridgeError('未能确认提交结果，请先查看千川原页或操作日志，勿直接重复提交。'+error.message,'OPERATION_UNCERTAIN',502);}
+ let response;try{response=await api.call(action.path,action.body,{intent:'write',reqFrom:'replica_product_confirmed_operation'});}catch(error){throw Object.assign(new BridgeError('未能确认提交结果，请先查看千川原页或操作日志，勿直接重复提交。'+error.message,'OPERATION_UNCERTAIN',502),{upstreamCode:error.code,writeAttempted:true});}
  const results=response.data?.results??[];
  if(action.action!=='task'&&(!results.length||results.some(r=>!r.flag)))throw new BridgeError(results.find(r=>!r.flag)?.error?.errorMessage||'提交结果尚未明确，请查看千川原页或操作日志后再决定是否重试','OPERATION_UNCERTAIN',502);
  api.detailCache?.delete(action.id);return {success:true,accountId:ACCOUNT_ID,planId:action.id,action:action.action};

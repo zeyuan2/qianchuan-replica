@@ -21,6 +21,7 @@ if (-not $webStatus) {
     }
     if (-not $webStatus) { throw '网页服务启动失败，请查看.runtime中的日志。' }
 }
+try { & (Join-Path $webRoot 'start-health.ps1') -NoBrowser | Out-Null } catch { Write-Warning 'Health recorder could not start.' }
 $webPreview="$webUrl/connect.html"
 if (-not $NoBrowser) { Start-Process $webPreview }
 Write-Output $webPreview

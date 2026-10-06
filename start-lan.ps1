@@ -54,5 +54,6 @@ if (-not $SkipFirewall) {
 }
 @{url=$lanUrl;address=$lanAddress;subnet=$lanSubnet;interface=$lanConfig.InterfaceAlias;port=$lanPort;firewallReady=$lanFirewallReady} | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $lanRuntime 'lan-status.json') -Encoding UTF8
 Set-Content -LiteralPath (Join-Path $lanRoot '内网访问地址.txt') -Value @("内网只读预览：$lanUrl/","允许访问的本地子网：$lanSubnet",'每5分钟完整采集商品自选计划；请保持采集Chrome已登录且只读扩展连接。','电脑重启后双击“打开内网网页版.cmd”重新启动。','电脑需要保持开机并连接内网；IP变化后以重新生成的地址为准。','数据位置：D:\qianchuan-replica\data') -Encoding UTF8
+try { & (Join-Path $PSScriptRoot 'start-watchdog.ps1') -Lan | Out-Null } catch { Write-Warning ('Watchdog: '+$_.Exception.Message) }
 if (-not $NoBrowser) { Start-Process "$lanUrl/" }
 Write-Output "$lanUrl/"

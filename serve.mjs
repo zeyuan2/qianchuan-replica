@@ -13,6 +13,7 @@ import {RangeQueryService} from './server/range-query.mjs';
 import {OperatorAccess} from './server/operator-access.mjs';
 import {BudgetAlerts} from './server/budget-alerts.mjs';
 import {parseTunnelToken} from './server/tunnel-token.mjs';
+import {readRoiHours} from './server/roi-hours.mjs';
 import {BatchBoost} from './server/batch-boost.mjs';
 const root=fileURLToPath(new URL('./dist/',import.meta.url));
 const port=Number(process.env.PORT||5173);
@@ -28,7 +29,7 @@ const budgetAlerts=await new BudgetAlerts({directory:fileURLToPath(new URL('./.r
 const monitor=await new ProductMonitor({api,directory:fileURLToPath(new URL('./data/monitor/',import.meta.url)),seedFile:fileURLToPath(new URL('./data/snapshots/2026-10-01-preview.json',import.meta.url)),onSnapshot:snapshot=>budgetAlerts.run(snapshot)}).init();
 const ranges=new RangeQueryService({api,monitor,directory:fileURLToPath(new URL('./data/monitor/ranges/',import.meta.url))});
 const detailCache=new Map();let detailQueue=Promise.resolve(),detailPending=0,detailWindow=Date.now(),detailCount=0;
-const batchBoost=await new BatchBoost({api,directory:fileURLToPath(new URL('./.runtime/batch-boost/',import.meta.url)),isActorActive:actor=>Boolean(operators.state.sessions[actor]?.expiresAt>Date.now()),onComplete:()=>{detailCache.clear();ranges.invalidate();void monitor.run();}}).init();
+const batchBoost=await new BatchBoost({api,directory:fileURLToPath(new URL('./.runtime/batch-boost/',import.meta.url)),beforeRead:async()=>{if(monitor.running)await monitor.running;},isActorActive:actor=>Boolean(operators.state.sessions[actor]?.expiresAt>Date.now()),onComplete:()=>{detailCache.clear();ranges.invalidate();void monitor.run();}}).init();
 function cachedDetail(q){
  if(q.accountId!==ACCOUNT_ID||!api.planCache.has(String(q.id)))throw new BridgeError('计划不属于当前已采集账户','ACCOUNT_MISMATCH',400);
  if(!['data','product','aweme','material','control','detail','log'].includes(q.tab)||q.eligible)throw new BridgeError('内网只开放计划数据查询','SCOPE_DENIED',400);
@@ -61,7 +62,7 @@ const server=http.createServer(async(req,res)=>{
    if(pairingSwitch)return json(res,409,{error:{code:'PAIRING_SWITCHING',message:'正在切换采集浏览器，请稍后连接'}});
    if(!bridge.authenticate(req.headers['x-replica-bridge']||url.searchParams.get('token')))return json(res,403,{error:{code:'PAIRING_REQUIRED',message:'连接码不正确'}});
    if(url.pathname==='/bridge/ping'&&req.method==='GET')return json(res,200,{accountId:ACCOUNT_ID,protocolVersion:1});
-   if(url.pathname==='/bridge/next'&&req.method==='GET'){const next=bridge.next(Number(url.searchParams.get('wait')||15000),{writes:url.searchParams.get('client')==='operator-v1'});monitor.bridgeAvailable();return json(res,200,{job:await next});}
+   if(url.pathname==='/bridge/next'&&req.method==='GET'){const aborted=new AbortController(),close=()=>aborted.abort();res.once('close',close);try{const next=bridge.next(Number(url.searchParams.get('wait')||15000),{writes:url.searchParams.get('client')==='operator-v1',signal:aborted.signal});monitor.bridgeAvailable();const job=await next;if(!res.destroyed)return json(res,200,{job});return;}finally{res.removeListener('close',close);}}
    if(url.pathname==='/bridge/reply'&&req.method==='POST'){const b=await readJson(req);return json(res,200,{accepted:bridge.reply(b.id,b.result)});}
    return json(res,404,{error:{message:'未知连接请求'}});
   }
@@ -94,6 +95,7 @@ const server=http.createServer(async(req,res)=>{
    if(url.pathname==='/api/operator/login'){const q=await readJson(req);res.setHeader('Set-Cookie',await operators.login(q.password,String(req.headers['x-replica-client']||req.socket.remoteAddress)));return json(res,200,{authenticated:true});}
    if(url.pathname==='/api/operator/logout'){res.setHeader('Set-Cookie',await operators.logout(req.headers.cookie));return json(res,200,{authenticated:false});}
   }
+  if(url.pathname==='/api/health/data'&&req.method==='GET'){const v=monitor.view();return json(res,200,{complete:v.monitor.complete,planCount:v.monitor.collected,total:v.monitor.total,fetchedAt:v.monitor.lastSuccessAt,bridgeConnected:v.monitor.bridgeConnected,captureFailed:Boolean(v.monitor.error)});}
   if(url.pathname==='/api/monitor'&&req.method==='GET'){
    if(url.searchParams.has('from')||url.searchParams.has('to'))return json(res,200,await ranges.get(url.searchParams.get('from'),url.searchParams.get('to')));
    return json(res,200,await monitor.forDate(url.searchParams.get('date')));
@@ -117,12 +119,15 @@ const server=http.createServer(async(req,res)=>{
    if(req.method!=='GET')return json(res,405,{error:{message:'不支持此请求方法'}});
    return json(res,200,{url:localOrigin,token:bridge.token,accountId:ACCOUNT_ID});
   }
+  if(url.pathname==='/api/roi-observation-source'&&req.method==='POST'){if(origin!==localOrigin)throw new BridgeError('仅本机查询','ORIGIN_DENIED',403);return json(res,200,await readRoiHours(api,await readJson(req),{beforeRead:async()=>{if(monitor.running)await monitor.running;}}));}
   if(url.pathname==='/api/bootstrap'&&req.method==='GET')return json(res,200,await api.bootstrap(url.searchParams.get('force')==='1'));
   if(url.pathname==='/api/dashboard'&&req.method==='POST')return json(res,200,await api.dashboard(await readJson(req)));
   if(url.pathname==='/api/detail'&&req.method==='POST')return json(res,200,await loadDetail(api,await readJson(req)));
+  if(url.pathname==='/api/operation/batch-scan-status'&&req.method==='GET')return json(res,200,batchBoost.scanStatus(url.searchParams.get('id'),operators.require(req.headers.cookie).id));
+  if(url.pathname==='/api/operation/batch-history'&&req.method==='GET')return json(res,200,batchBoost.history(operators.require(req.headers.cookie).id));
   if(url.pathname==='/api/operation/batch-status'&&req.method==='GET')return json(res,200,batchBoost.get(url.searchParams.get('id'),operators.require(req.headers.cookie).id));
   if(url.pathname==='/api/operation/batch-cancel'&&req.method==='POST'){if(origin!==localOrigin)throw new BridgeError('请从本页面提交','ORIGIN_DENIED',403);const actor=operators.require(req.headers.cookie).id,q=await readJson(req);return json(res,200,await batchBoost.cancel(q.id,actor));}
-  if(['/api/operation/prepare','/api/operation/commit','/api/operation/materials','/api/operation/batch-prepare','/api/operation/batch-commit'].includes(url.pathname)&&req.method==='POST'){
+  if(['/api/operation/prepare','/api/operation/commit','/api/operation/materials','/api/operation/batch-prepare','/api/operation/batch-commit','/api/operation/batch-scan','/api/operation/batch-recheck'].includes(url.pathname)&&req.method==='POST'){
    if(origin!==localOrigin)throw new BridgeError('请从本页面提交','ORIGIN_DENIED',403);
    const session=requireWriteAccess(req),q=await readJson(req);
    if(operationBusy||(batchBoost.running&&!url.pathname.endsWith('/batch-commit')))throw new BridgeError('另一项操作或批次正在处理中，请稍后再试','OPERATION_BUSY',409);
@@ -130,11 +135,13 @@ const server=http.createServer(async(req,res)=>{
    try{
     if(monitor.running)await monitor.running;
     operators.require(req.headers.cookie);
+    if(url.pathname.endsWith('/batch-scan'))return json(res,202,batchBoost.scan(q,session.id));
+    if(url.pathname.endsWith('/batch-recheck'))return json(res,200,await batchBoost.recheck(q.id,q.planId,session.id));
     if(url.pathname.endsWith('/batch-prepare'))return json(res,200,await batchBoost.prepare(q,session.id));
     if(url.pathname.endsWith('/batch-commit'))return json(res,200,await batchBoost.start(q,session.id));
     if(url.pathname.endsWith('/materials')){if(q.accountId!==ACCOUNT_ID||q.tab!=='material'||q.materialType!=='video'||q.eligible!==true)throw new BridgeError('素材查询参数无效','INVALID_QUERY',400);return json(res,200,await loadDetail(api,q));}
     if(url.pathname.endsWith('/prepare'))return json(res,200,await prepareOperation(api,q,session.id));
-    const result=await commitOperation(api,q,session.id);detailCache.clear();ranges.invalidate();void monitor.run();return json(res,200,result);
+    let result;try{result=await commitOperation(api,q,session.id);}finally{batchBoost.invalidatePlan(q.planId);}detailCache.clear();ranges.invalidate();void monitor.run();return json(res,200,result);
    }finally{operationBusy=false;}
   }
   if(url.pathname.startsWith('/api/'))return json(res,404,{error:{code:'NOT_FOUND',message:'接口尚未实现'}});

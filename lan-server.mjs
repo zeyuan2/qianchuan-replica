@@ -1,10 +1,11 @@
+import {reportWriter} from './server/health-store.mjs';
 import http from 'node:http';
 import {readFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve} from 'node:path';
 import {createHash} from 'node:crypto';
 
-export function createLanServer({host,port,html,assets=new Map(),proxy,publicOrigin=null,authorize=null}) {
+export function createLanServer({host,port,html,assets=new Map(),proxy,publicOrigin=null,authorize=null,healthReport=reportWriter(fileURLToPath(new URL('./.runtime/health/',import.meta.url)))}) {
  if(publicOrigin&&(!publicOrigin.startsWith('https://')||typeof authorize!=='function'))throw new Error('Public access requires HTTPS and identity validation');
  const allowedHosts=new Set([publicOrigin?new URL(publicOrigin).host:`${host}:${port}`]);
  const etag='"'+createHash('sha256').update(html).digest('hex')+'"';
@@ -19,15 +20,20 @@ export function createLanServer({host,port,html,assets=new Map(),proxy,publicOri
   const origin=publicOrigin||`http://${host}:${port}`;
   let identity=null;if(publicOrigin){res.setHeader('Cache-Control','no-store');res.setHeader('Strict-Transport-Security','max-age=31536000');try{identity=await authorize(req);}catch{res.writeHead(401,{'Content-Type':'application/json; charset=utf-8'});return res.end(JSON.stringify({error:{code:'ACCESS_REQUIRED',message:'登录验证失效，请重新打开网页登录'}}));}}
   if(req.headers.origin&&req.headers.origin!==origin){res.writeHead(403);return res.end('Origin not allowed');}
+  if(url.pathname==='/lan-api/health/report'&&req.method==='POST'){
+   if(req.headers.origin!==origin||!String(req.headers['content-type']||'').includes('application/json')){res.writeHead(403);return res.end('Origin or type not allowed');}
+   let input='';for await(const part of req){input+=part;if(Buffer.byteLength(input)>4096){res.writeHead(413);return res.end('Too large');}}
+   try{let report;try{report=JSON.parse(input);}catch{throw Object.assign(Error(),{status:400});}const result=await healthReport(report);res.writeHead(200,{'Content-Type':'application/json'});return res.end(JSON.stringify(result));}catch(e){res.writeHead([400,429].includes(e.status)?e.status:503,{'Content-Type':'application/json'});return res.end(JSON.stringify({error:{code:'HEALTH_REPORT_UNAVAILABLE'}}));}
+  }
   const detailRead=url.pathname==='/lan-api/detail'&&req.method==='POST';
-  const operatorRoute=new Map([['/lan-api/operator/status','GET'],['/lan-api/operator/login','POST'],['/lan-api/operator/logout','POST'],['/lan-api/operation/prepare','POST'],['/lan-api/operation/commit','POST'],['/lan-api/operation/materials','POST'],['/lan-api/operation/batch-prepare','POST'],['/lan-api/operation/batch-commit','POST'],['/lan-api/operation/batch-status','GET'],['/lan-api/operation/batch-cancel','POST']]);
+  const operatorRoute=new Map([['/lan-api/operator/status','GET'],['/lan-api/operator/login','POST'],['/lan-api/operator/logout','POST'],['/lan-api/operation/prepare','POST'],['/lan-api/operation/commit','POST'],['/lan-api/operation/materials','POST'],['/lan-api/operation/batch-prepare','POST'],['/lan-api/operation/batch-commit','POST'],['/lan-api/operation/batch-status','GET'],['/lan-api/operation/batch-history','GET'],['/lan-api/operation/batch-cancel','POST'],['/lan-api/operation/batch-scan','POST'],['/lan-api/operation/batch-scan-status','GET'],['/lan-api/operation/batch-recheck','POST']]);
   const operatorRequest=operatorRoute.get(url.pathname)===req.method&&Boolean(proxy);
   if(!['GET','HEAD'].includes(req.method)&&!detailRead&&!operatorRequest){res.writeHead(405,{Allow:'GET, HEAD'});return res.end('Method not allowed');}
   if(operatorRequest){
    res.setHeader('Cache-Control','no-store');
    if(req.method==='POST'&&(req.headers.origin!==origin||!String(req.headers['content-type']||'').includes('application/json'))){res.writeHead(403,{'Content-Type':'application/json'});return res.end(JSON.stringify({error:{message:'请在本站页面提交操作'}}));}
-   let body='';for await(const chunk of req){body+=chunk;if(body.length>20000){res.writeHead(413);return res.end('Too large');}}
-   const data=await proxy(url.pathname.replace('/lan-api/','/api/')+(url.pathname.endsWith('/batch-status')?'?id='+encodeURIComponent(url.searchParams.get('id')||''):''),{method:req.method,...(req.method==='POST'?{body}:{}),headers:{'Content-Type':'application/json',Origin:'http://127.0.0.1:5173',Cookie:req.headers.cookie||'','X-Replica-Client':identity?'access:'+identity.email:req.socket.remoteAddress||'lan'}});
+   let body='';for await(const chunk of req){body+=chunk;if(body.length>(url.pathname.startsWith('/lan-api/operation/batch-')?1048576:20000)){res.writeHead(413);return res.end('Too large');}}
+   const data=await proxy(url.pathname.replace('/lan-api/','/api/')+(['/lan-api/operation/batch-status','/lan-api/operation/batch-scan-status'].includes(url.pathname)?'?id='+encodeURIComponent(url.searchParams.get('id')||''):''),{method:req.method,...(req.method==='POST'?{body}:{}),headers:{'Content-Type':'application/json',Origin:'http://127.0.0.1:5173',Cookie:req.headers.cookie||'','X-Replica-Client':identity?'access:'+identity.email:req.socket.remoteAddress||'lan'}});
    if(data.cookie)res.setHeader('Set-Cookie',data.cookie.replace('Path=/api/','Path=/lan-api/')+(publicOrigin?'; Secure':''));
    res.writeHead(data.status,{'Content-Type':'application/json; charset=utf-8'});return res.end(data.body);
   }
@@ -66,7 +72,7 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const host=process.env.LAN_HOST||'192.168.1.100',port=Number(process.env.LAN_PORT||8088);
  if(!/^(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(host)||!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid LAN address or port');
  const html=await readFile(new URL('./dist/lan.html',import.meta.url)),assets=new Map();
- const files=['lan-main.mjs','batch-boost.mjs','batch-model.mjs','lan-data.mjs','lan-plan-detail.mjs','lan-operations-ui.mjs','lan-task-ui.mjs','operator-ui.mjs','metric-picker.mjs','metric-config.mjs','selection-state.mjs','preferences.mjs','top-metric-catalog.mjs','table-metric-catalog.mjs','operations-ui.mjs','task-ui.mjs','poller.mjs','styles.css','scope.css','metric-picker.css','live.css','lan.css','assets/favicon.svg'];
+ const files=['health-client.js','lan-main.mjs','batch-boost.mjs','batch-model.mjs','lan-data.mjs','lan-plan-detail.mjs','lan-operations-ui.mjs','lan-task-ui.mjs','operator-ui.mjs','metric-picker.mjs','metric-config.mjs','selection-state.mjs','preferences.mjs','top-metric-catalog.mjs','table-metric-catalog.mjs','operations-ui.mjs','task-ui.mjs','poller.mjs','styles.css','scope.css','metric-picker.css','live.css','lan.css','assets/favicon.svg'];
  for(const file of files){const type=file.endsWith('.css')?'text/css; charset=utf-8':file.endsWith('.svg')?'image/svg+xml':'text/javascript; charset=utf-8';assets.set('/'+file,{body:await readFile(new URL('./dist/'+file,import.meta.url)),type});}
  const proxy=async(endpoint,options)=>{
   try{const response=await fetch('http://127.0.0.1:5173'+endpoint,{...options,signal:AbortSignal.timeout(65000)});return {status:response.status,body:Buffer.from(await response.arrayBuffer()),cookie:response.headers.get('set-cookie')};}

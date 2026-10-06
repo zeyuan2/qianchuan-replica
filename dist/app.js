@@ -9,8 +9,8 @@ const escape = value => String(value).replace(/[&<>"']/g, s => ({'&':'&amp;','<'
 const money = n => n == null ? '-' : Number(n).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
 const original = 'https://qianchuan.jinritemai.com/overall-prom?aavid=1000000000000000&campaignType=1&dateRange=2026-10-01%2C2026-10-01&uniTab=ad#?marGoal=1&uniVideoTab=1&overallPromViewTab=product&smartBidType=7&dataUpdateTime=2026-10-01+15%3A48&page=1&pageSize=10&sortType=desc&searchOption=1&costItemsOption=1&adStatusFilterType=0&costStatus=-1&customFilterType=-1&bpPage=1&bpPageSize=10&bpSortType=desc&adDetailTab=data&adDetailEffectDiagnosesCompetitive=liveRace&adDetailBreadcrumb=%7B%7D&adDetailCustomCreativeStatusFilterType=0&adDetailCustomCreativePage=1&adDetailCustomCreativePageSize=10&adDetailCustomCreativeSortType=asc&adDrawerDetailTab=data&adDrawerCustomCreativeStatusFilterType=0&adDrawerCustomCreativePage=1&adDrawerCustomCreativePageSize=10&adDrawerCustomCreativeSortType=asc&adDrawerMaterialPage=1&adDrawerMaterialPageSize=10&adDrawerMaterialSearchData=%7B%22option%22%3A1%7D&adDrawerMaterialSortField=stat_cost&adDrawerMaterialSortType=desc&adDrawerMaterialHavingCost=1&sortField=create_time';
 $('.original-link').href = original;
-const screenshotMetrics = [{label:'综合营销ROI',value:'—',change:''}];
-const screenshotPlans = []; // Handoff: historical account rows removed.
+const screenshotMetrics = []; // Historical account values omitted.
+const screenshotPlans = []; // Historical account rows omitted.
 let model = {source:'screenshot',metrics:screenshotMetrics,plans:screenshotPlans};
 const preferenceKey = `qianchuan:${ACCOUNT_ID}:top-selection:v2`;
 const tablePreferenceKey = `qianchuan:${ACCOUNT_ID}:table-selection:v2`;
@@ -47,7 +47,7 @@ function formatTableValue(value,format){if(value==null)return '-';if(format==='m
 function tableCells(plan){return tableCatalog().map(m=>{const value=plan[m.key];const basis=plan.basis?.[m.key];return `<td data-col="${escape(m.key)}" ${value===undefined?'title="此指标尚未采集到该计划的真实数值"':''}>${formatTableValue(value,m.format)}${basis===undefined?'':`<div class="subtle">基础 ${formatTableValue(basis,m.format)}</div>`} </td>`;}).join('');}
 function renderTableHeaders(){const row=$('thead tr');row.querySelectorAll('[data-col]').forEach(el=>el.remove());row.insertAdjacentHTML('beforeend',tableCatalog().map(m=>`<th data-col="${escape(m.key)}"><button data-sort="${escape(m.key)}">${escape(m.label)} ↕</button></th>`).join(''));}
 
-const pendingText = `账户 ${ACCOUNT_ID} 的真实接口尚未接入。交接包已移除历史截图和数值，等待连接新的采集环境。`;
+const pendingText = `账户 ${ACCOUNT_ID} 的真实接口尚未接入。当前数值来自你最新提供的截图，仅用于页面复刻参考，不能作为实时数据。`;
 const chart = i => `<svg class="spark" viewBox="0 0 100 30" aria-label="截图趋势示意"><path d="${i===4?'M2 3 7 20 42 20 47 10 52 20 86 20 91 9 97 20':i===0?'M2 20 10 20 16 16 23 18 28 14 40 19 52 20 61 18 66 22 71 7 77 5 87 14 94 19 99 17':'M2 20 13 19 18 17 25 19 31 17 44 16 57 17 63 21 69 8 77 5 86 8 91 18 100 17'}" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></svg>`;
 function renderMetrics(){
  const visible=selectedMetrics.map(key=>{const metric=TOP_METRIC_CONFIG.metrics.find(m=>m.key===key);return {...metric,...(model.metrics.find(m=>m.label===metric.label)??{})};});

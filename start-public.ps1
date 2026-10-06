@@ -25,8 +25,9 @@ if (Test-Path -LiteralPath (Join-Path $publicRuntime 'tunnel.pid')) {
  $tunnelActive=$tunnelExisting -and $tunnelExisting.ExecutablePath -eq $tunnelExe -and $tunnelExisting.CommandLine -match [regex]::Escape($tunnelTokenFile)
 }
 if (-not $tunnelActive) {
- $tunnelProcess=Start-Process -FilePath $tunnelExe -ArgumentList @('--no-autoupdate','tunnel','--protocol','auto','--metrics','127.0.0.1:20245','run','--token-file',$tunnelTokenFile) -WorkingDirectory $publicRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $publicRuntime 'tunnel.stdout.log') -RedirectStandardError (Join-Path $publicRuntime 'tunnel.stderr.log') -PassThru
+ $tunnelProcess=Start-Process -FilePath $tunnelExe -ArgumentList @('--no-autoupdate','tunnel','--protocol','http2','--metrics','127.0.0.1:20245','run','--token-file',$tunnelTokenFile) -WorkingDirectory $publicRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $publicRuntime 'tunnel.stdout.log') -RedirectStandardError (Join-Path $publicRuntime 'tunnel.stderr.log') -PassThru
  Set-Content -LiteralPath (Join-Path $publicRuntime 'tunnel.pid') -Value $tunnelProcess.Id
 }
+try { & (Join-Path $PSScriptRoot 'start-watchdog.ps1') -Public | Out-Null } catch { Write-Warning ('Watchdog: '+$_.Exception.Message) }
 if (-not $NoBrowser) { Start-Process $publicConfig.origin }
 Write-Output $publicConfig.origin

@@ -1,6 +1,7 @@
 {
   "algorithm": "SHA-256",
-  "note": "Manifest excludes itself. Git commit identifies the complete baseline.",
+  "date": "2026-10-07",
+  "note": "Excludes itself; sanitized production branch; runtime excluded.",
   "files": [
     {
       "path": ".gitattributes",
@@ -13,9 +14,34 @@
       "sha256": "d3ba74615ce6867b645e4ffbe89d5161e443966302eb1166ba162f8b51e28bb6"
     },
     {
+      "path": "GITHUB-BASELINE.md",
+      "bytes": 309,
+      "sha256": "481503dfcb75337e8d527dd8f6856a467af0a45573d264760de2379e22dc0fe9"
+    },
+    {
+      "path": "HANDOFF-METADATA.json",
+      "bytes": 1465,
+      "sha256": "e4bac53aa1814ee4e3a415f111051d7df093dc790435495e63a1e3da70fc4a8d"
+    },
+    {
+      "path": "PACKAGE-EXCLUSIONS.json",
+      "bytes": 578,
+      "sha256": "757e84e472ce26f8fafd09937f6254190480cdf1b78e575af586e5cdd66599d3"
+    },
+    {
+      "path": "README.md",
+      "bytes": 1578,
+      "sha256": "769f0d3f4ac9b826943579fda562e6c8d85ea5f21aceb87321604e1cce7d9cd2"
+    },
+    {
+      "path": "SOURCE-FINGERPRINTS.json",
+      "bytes": 9070,
+      "sha256": "da4872aab2e6897d57e9cd004a7d29ed7cd5868fca21b0088ef56a3cf2aef14a"
+    },
+    {
       "path": "bridge-extension/background.js",
-      "bytes": 4237,
-      "sha256": "a73664d8bceb16636dce2f49e6653e56fe5dcce83aa0afd7a6adbd6fa04e4b7f"
+      "bytes": 4812,
+      "sha256": "027604db7df52842fd4268face63ddb7b47009132c403df15af4330d2d1ad4e3"
     },
     {
       "path": "bridge-extension/connect-page.js",
@@ -23,9 +49,14 @@
       "sha256": "e7e7b48f85cb34a74c14346aa0e75d6e1a5218ccfb27e344241536f3bcff6f99"
     },
     {
+      "path": "bridge-extension/execute-guard.mjs",
+      "bytes": 1085,
+      "sha256": "5fcc8c25db198327c2df2f69f46aa01bfed6089631463908fff1e1615f5fd986"
+    },
+    {
       "path": "bridge-extension/manifest.json",
       "bytes": 775,
-      "sha256": "a36a65774dc85669fcae2e9e7552561868fd3b22d670d4033b22459457e0894f"
+      "sha256": "0cffbf1f3e1785d48f552e2d40a520177e117532c5a2db064d65d99575defc09"
     },
     {
       "path": "bridge-extension/pairing.mjs",
@@ -53,6 +84,11 @@
       "sha256": "c1bc91a7a26fa7b9be0ec3ea8f6dcd4a2d83c78d402039449e412f710c380894"
     },
     {
+      "path": "config-examples/README.md",
+      "bytes": 766,
+      "sha256": "e1dae6291d6d5c1c82a1385a2ee4cd0a169f2287f1241fc9559e190089ec145d"
+    },
+    {
       "path": "config-examples/budget-alerts.example.json",
       "bytes": 63,
       "sha256": "a7645299a9c1cdb278f6b6488f46a114c3f77ac04b243582dccb89e846707e80"
@@ -63,19 +99,14 @@
       "sha256": "606556c681836cf0563d7829fef4a7e8ece5542b8fa8895ecedf3831a6ee1e22"
     },
     {
-      "path": "config-examples/README.md",
-      "bytes": 766,
-      "sha256": "e1dae6291d6d5c1c82a1385a2ee4cd0a169f2287f1241fc9559e190089ec145d"
-    },
-    {
       "path": "config-examples/tunnel-token.example.txt",
       "bytes": 44,
       "sha256": "0a1c36f3cb8882edc67ab49b821b41b7270ddaab5dd47243f4ab63a870081384"
     },
     {
       "path": "dist/app.js",
-      "bytes": 15285,
-      "sha256": "c881d802daf82851ec80151e02655d03a9ccc1da89f0bc8f39b266dcb3be3f67"
+      "bytes": 15294,
+      "sha256": "334f33627d58aab09b7c2d6dd068846d00fc5abc646927b22b04fe8538013513"
     },
     {
       "path": "dist/assets/favicon.svg",
@@ -89,13 +120,13 @@
     },
     {
       "path": "dist/batch-boost.mjs",
-      "bytes": 13970,
-      "sha256": "634cc677e2b2fa57851c7a91af78638daa9b58ea433fdbddcb78457a9dcc88de"
+      "bytes": 20162,
+      "sha256": "c8215badb35804bcb0977be476dc671b87ba6fbd52f86a913397d5208519292e"
     },
     {
       "path": "dist/batch-model.mjs",
-      "bytes": 1436,
-      "sha256": "fabfa6b619178d3f29bd6c6b6594d67ee4b0acfe4223c855a3fe768f2fe332bf"
+      "bytes": 1884,
+      "sha256": "2c9d7900ad7317ff7ab1ef74f14650134c587dd6685739c45bbcaba4319ec262"
     },
     {
       "path": "dist/connect.html",
@@ -105,7 +136,12 @@
     {
       "path": "dist/external-connect.html",
       "bytes": 2370,
-      "sha256": "06693dc752441ab8c8134cd61e61256ebedd60f3e00e8fdf70bd7842b0ab17ad"
+      "sha256": "4bab983a081b1947e84aa2c879c7485994e0c2dfa6c1af6a9b1673b1df6afba5"
+    },
+    {
+      "path": "dist/health-client.js",
+      "bytes": 6724,
+      "sha256": "b3a85147d603b39d59973c529112b1e4ff1d2d5d9430a58a64fa7e2fabd0db39"
     },
     {
       "path": "dist/index.html",
@@ -119,8 +155,8 @@
     },
     {
       "path": "dist/lan-main.mjs",
-      "bytes": 29357,
-      "sha256": "2428ee44c51ccd1848e5e15d77cac88d6dddd6c4702e80c1928b20e599214d09"
+      "bytes": 29443,
+      "sha256": "19bdff2d546b276c9b5a0b74ef3a1d19fac426795dc1cdb32e1b1dfafb226dcf"
     },
     {
       "path": "dist/lan-operations-ui.mjs",
@@ -139,13 +175,13 @@
     },
     {
       "path": "dist/lan.css",
-      "bytes": 22469,
-      "sha256": "aadd40fbebfda9fe2cba5bfd6eed6251e897c3accbcf5ea4c1161adc95771e0a"
+      "bytes": 23058,
+      "sha256": "4197f453fa1795141ee4de6c5d26c4d0b60a4a752d99ae8b7cb6f0c95f6677c9"
     },
     {
       "path": "dist/lan.html",
-      "bytes": 10844,
-      "sha256": "5e21f3e0cc93ef10629f6b9e9af46d8b96c54cbab94371016ef8597c447b602d"
+      "bytes": 10884,
+      "sha256": "fede85b537ec3231785fc63c521b19ea3d7b5ad9a0cc891ada003acaef1c70f5"
     },
     {
       "path": "dist/live.css",
@@ -244,8 +280,8 @@
     },
     {
       "path": "enable-lan-firewall.ps1",
-      "bytes": 1865,
-      "sha256": "0ec956cec53fef93ca0cf6f65cf1e58a53183c4f0eb9ef733ebd090fc2fa56b7"
+      "bytes": 1892,
+      "sha256": "46fd79efacacb3f10f783974629d1dccb09c2aa3b3c068204e35360a0861123b"
     },
     {
       "path": "fixtures/035-getUserConfAndDataSet.response.json",
@@ -288,24 +324,14 @@
       "sha256": "aaed06b950542ffdb0f01d4e8f41de6b561734f9b9a606473f6b4701ae1b806c"
     },
     {
-      "path": "GITHUB-BASELINE.md",
-      "bytes": 1346,
-      "sha256": "fdda0104b1e657f90c058281de4f1ea75964ea7d3ff4829ee0ab705346eb00e2"
-    },
-    {
-      "path": "HANDOFF-METADATA.json",
-      "bytes": 1697,
-      "sha256": "0138567144dc0ede9ba1370f62b9a1678d2ba96560b38e297c1dad1f2550264f"
+      "path": "install-login-startup.ps1",
+      "bytes": 1090,
+      "sha256": "3d076207fb4725590c18585d0829b7dc37eaaf479bb9c295f78fc7437271db08"
     },
     {
       "path": "lan-server.mjs",
-      "bytes": 9774,
-      "sha256": "25ee260b7884f0eb41e30d8c2790a5b46d3482d339432de9ce26ac70628e8c3b"
-    },
-    {
-      "path": "PACKAGE-EXCLUSIONS.json",
-      "bytes": 578,
-      "sha256": "757e84e472ce26f8fafd09937f6254190480cdf1b78e575af586e5cdd66599d3"
+      "bytes": 11030,
+      "sha256": "c525fb6ef287223d93a69a37fab7b0565aa3023eb75df23f5e7dcb338150a9a2"
     },
     {
       "path": "package-lock.json",
@@ -319,18 +345,13 @@
     },
     {
       "path": "public-server.mjs",
-      "bytes": 2367,
-      "sha256": "e4c0fc8f851caa859e8514e6efc5fc704c28e2af19b2459173c734106ee7b064"
-    },
-    {
-      "path": "README.md",
-      "bytes": 11976,
-      "sha256": "cbf880598efab97b0ddc51e625181c6ae8c9c7649607fefa11ab3fec11ad4384"
+      "bytes": 2386,
+      "sha256": "922e42e1169caf7be60b89d04cb267bee9266de4905217c4b6da712b4b17b9ea"
     },
     {
       "path": "scripts/build-lan.mjs",
-      "bytes": 15788,
-      "sha256": "564850ab993616bee53e1280ecd8734a2b25b168419d3ebc1be3f29ef27d481f"
+      "bytes": 16140,
+      "sha256": "934b9695846da514349de2d9480b82077b43c56ef469c93a11c7f0d433d252ca"
     },
     {
       "path": "scripts/generate-synthetic-fixtures.mjs",
@@ -343,9 +364,19 @@
       "sha256": "245f40a81ec7dc68bd66206477b4380cd5aaf0447d6b36488b82cebc138cc0f8"
     },
     {
+      "path": "scripts/preview-batch.mjs",
+      "bytes": 5891,
+      "sha256": "d7caf4a4130685c392a7a3f90ee09869c0f32edae19972a4774b6c5c759a1b9b"
+    },
+    {
+      "path": "scripts/preview-health.mjs",
+      "bytes": 2714,
+      "sha256": "88f12b6e4b1350332541e6a38568bb54524d5b0cc484feed42881179e6f7261c"
+    },
+    {
       "path": "serve.mjs",
-      "bytes": 15636,
-      "sha256": "d5d17cd363841890874ddf0862916c66a7c0fe54f01ce6b0181d840d5f844299"
+      "bytes": 17209,
+      "sha256": "a16926b7ad34bcf6ce279187befa9ed3c03c227209267eff4e449fefbf743702"
     },
     {
       "path": "server/api-templates.json",
@@ -359,13 +390,28 @@
     },
     {
       "path": "server/batch-boost.mjs",
-      "bytes": 6486,
-      "sha256": "e9f6d73c56a5c4aabdbf011d4c8f46820b070524839b236cfa164d791978e0bc"
+      "bytes": 17876,
+      "sha256": "3f09787f1dcdcd503296b3f7a77801d38f474d2a57e23bcff5ab801f6107cc89"
+    },
+    {
+      "path": "server/boost-cache.mjs",
+      "bytes": 1774,
+      "sha256": "976d55e52665c7580ba80c0627146f99a1879b4d58bfcd6fc0cfaad991e82afb"
+    },
+    {
+      "path": "server/boost-list.mjs",
+      "bytes": 4884,
+      "sha256": "5f8a874441566b092e113ea37196e57068ffc2f5ffd14e031d5bae32be7287a2"
+    },
+    {
+      "path": "server/boost-state.mjs",
+      "bytes": 3965,
+      "sha256": "fff228b230e7a775f4ca4db19f9d3b8174cfb2356a0bcadae72f05627102c9ae"
     },
     {
       "path": "server/bridge.mjs",
-      "bytes": 3429,
-      "sha256": "3f8426e179a0ed7e40ac95f9b35c06c1651e59c9a17f0a49e36d8d6591f32746"
+      "bytes": 4397,
+      "sha256": "ee1a569f1e223ecde1307aa3ecf855a6a7f92ec13eaf1cc4bd1b4887caad25e7"
     },
     {
       "path": "server/budget-alerts.mjs",
@@ -380,7 +426,7 @@
     {
       "path": "server/detail-templates.json",
       "bytes": 28156,
-      "sha256": "af8fa9f58f0c1d93d164195f20485485cf1e60a31a83c76fb61caafea46e00cd"
+      "sha256": "4ca7b0c134e608844d6b8cf220c840e2fc2c288e522be3eea67e378c347915f1"
     },
     {
       "path": "server/details.mjs",
@@ -393,14 +439,24 @@
       "sha256": "4670ea1fb2c6a93bedde63bf6911ae78ed5f75ded7a18f933056a277ad1c39fd"
     },
     {
+      "path": "server/health-recorder.mjs",
+      "bytes": 6183,
+      "sha256": "337a7cf10e4d81f6a3ca89bd9fab40292b01f4c23e93556d85fd46af7b653be0"
+    },
+    {
+      "path": "server/health-store.mjs",
+      "bytes": 4323,
+      "sha256": "f3966170857ae40fc98e48af224ee55d42c92a4d9cc834ad8e588703278f83aa"
+    },
+    {
       "path": "server/monitor.mjs",
-      "bytes": 7134,
-      "sha256": "5aedb4d6a7a149c2577fa971419531f6cc7ba18a228c746ba94ead7004e2edcc"
+      "bytes": 7180,
+      "sha256": "c75c0216374273c4f233f66c6d4570d3e27e3051a20327fe979fe5f15eefc257"
     },
     {
       "path": "server/operations.mjs",
-      "bytes": 6941,
-      "sha256": "9f45fd5376db959eb2de9e0d2b47adb18da43579cc4d5ada4b5612d41ae3051d"
+      "bytes": 7104,
+      "sha256": "7a79587a794c9b67f01747e0c9a1b39522db9fb041defe85edc2e2ca3536136c"
     },
     {
       "path": "server/operator-access.mjs",
@@ -413,6 +469,11 @@
       "sha256": "ab07c4a684d6e011be921f073d82cc9497db8e37004888dd53bc734b2bb1beee"
     },
     {
+      "path": "server/roi-hours.mjs",
+      "bytes": 4396,
+      "sha256": "f21c9274e5fd1d9d9f5e29ac8c3a6cdbdbca75a8227b8ab343fb5c285c832214"
+    },
+    {
       "path": "server/tasks.mjs",
       "bytes": 2779,
       "sha256": "90b99446d668fce393690c3fd8bdafc725e69478b7d0d3fc0985c4ee32dc0e30"
@@ -423,24 +484,34 @@
       "sha256": "ef82ed611a66fda54a648eacb681b6dd7359441f4e1adc8fd82a448e14ac61fc"
     },
     {
-      "path": "SOURCE-FINGERPRINTS.json",
-      "bytes": 8074,
-      "sha256": "6fd916226092e91c8b7b5579562488e6de3ac84f073a7e9832a86e6f38aeec0a"
+      "path": "start-at-login.ps1",
+      "bytes": 2452,
+      "sha256": "f0484b99a76ae5bb73c73d1957f6ba93dbf1253503e35370da00c12ea972c1b5"
+    },
+    {
+      "path": "start-health.ps1",
+      "bytes": 1214,
+      "sha256": "0ea8d0351ff9c0975590e390257d2d588fe29f9101f47589fc53a3771e322643"
     },
     {
       "path": "start-lan.ps1",
-      "bytes": 4577,
-      "sha256": "ebda5c2e6bc9c48d836c48bacf78d7908518d9ed28830162de07c84d30a48d3b"
+      "bytes": 4768,
+      "sha256": "1223658f608d57f999d8fb63e067699dd72fd0f14d198e1121f2be77fa2ba625"
     },
     {
       "path": "start-public.ps1",
-      "bytes": 2661,
-      "sha256": "07da4742fc170c14532f109c3aa5eb734322a01e5431ae203fc4b060ecbdef1d"
+      "bytes": 2831,
+      "sha256": "5aaca90d133aec7a2cc3937f8e61a5058841ceda5f14d87c2284e0656a5fa287"
+    },
+    {
+      "path": "start-watchdog.ps1",
+      "bytes": 2099,
+      "sha256": "ba65c159ebf6f0a8b3c02338d49bf74da67419986dd6e5ef2f257f5ea87d1d62"
     },
     {
       "path": "start-web.ps1",
-      "bytes": 1421,
-      "sha256": "4f055ac316d263cafd31307c01f2125830ceb991c4c693479d50ec4e74f205b2"
+      "bytes": 1553,
+      "sha256": "894dfafbbdbc8d7b22a63606160757769606747c4815bdc8ade9c125d0a9c349"
     },
     {
       "path": "tests/api.test.mjs",
@@ -449,8 +520,28 @@
     },
     {
       "path": "tests/batch-boost.test.mjs",
-      "bytes": 4923,
-      "sha256": "e8ad9ed1b4ae771364b04b1b4f9a40aebeb0262cd6efa5eb6e4e81c5e02e2c7c"
+      "bytes": 14380,
+      "sha256": "99431566b55c789b0a5f8dd59b35522d0d16bc44b70762e4f3598c7d62edc940"
+    },
+    {
+      "path": "tests/boost-cache.test.mjs",
+      "bytes": 2258,
+      "sha256": "5486aa10c5db41c0eb071895efff5ea8aa2949982df0a96cf2295b2d6ec8a0fe"
+    },
+    {
+      "path": "tests/boost-list.test.mjs",
+      "bytes": 3219,
+      "sha256": "a8939f176866a8fb0f6eca4612eae241ab5839ef411fe812afdbc463be440cdf"
+    },
+    {
+      "path": "tests/boost-state.test.mjs",
+      "bytes": 2734,
+      "sha256": "1e804d583c7cb494d7724389c8b9fa786ed6982c1287c3d363d8f91d38f21c97"
+    },
+    {
+      "path": "tests/bridge-reliability.test.mjs",
+      "bytes": 3531,
+      "sha256": "7fecf05476be4b4595b12fba102e9bb1cc3deabe429c9c4dfa76958b0437aa3c"
     },
     {
       "path": "tests/budget-alerts.test.mjs",
@@ -461,6 +552,11 @@
       "path": "tests/extension-pairing.test.mjs",
       "bytes": 1034,
       "sha256": "6cd152a8a17a37a227b65734011393092b7b3de5b145729327da1805dfcc5505"
+    },
+    {
+      "path": "tests/health.test.mjs",
+      "bytes": 10966,
+      "sha256": "990e22bcef2ad80acc1edcef9e1f101777435e251c7b19c890149e8f943a4d23"
     },
     {
       "path": "tests/lan-server.test.mjs",
@@ -493,9 +589,14 @@
       "sha256": "f1430cc38f8adbfc007bd41877b6806d9d46f735b04e9b78d7fd5011ea87f37c"
     },
     {
+      "path": "watch-services.ps1",
+      "bytes": 7473,
+      "sha256": "9705edfc11100cfc32a9ee1382a2cb377a12b5f3703084e90d1d999726974d03"
+    },
+    {
       "path": "交接说明.md",
-      "bytes": 11908,
-      "sha256": "79f9296d5453c3df7e4d98e6c771472d97d83087a26cedac006f930d763cded2"
+      "bytes": 5165,
+      "sha256": "e476fa7564ee1a7b262d8a5ba757ec1a60febe85484611ca31f76f0e9f93ed5c"
     },
     {
       "path": "内网部署说明.txt",
@@ -506,6 +607,11 @@
       "path": "启动.cmd",
       "bytes": 417,
       "sha256": "6e7c2fe6240da4cede9047ec29fdbca75cdd2dac4b59ac8f18326cbc78831612"
+    },
+    {
+      "path": "外网隧道恢复-20261004.md",
+      "bytes": 3495,
+      "sha256": "e77b1c05b6c60d5fdbc457aefb5c7ddf4ccd8fd3c060378f1ea1ec1a5d6b51f3"
     },
     {
       "path": "打开内网网页版.cmd",
@@ -523,9 +629,29 @@
       "sha256": "10e5995bc645fe62021be2d9971bddd8a29ade52a77c4c6a50f2533259ecbb7d"
     },
     {
+      "path": "批量起量升级说明.md",
+      "bytes": 7750,
+      "sha256": "c2bd168f1ed4734a04515644f23e3639a0b0006d8048cd0ea9ade64addc98857"
+    },
+    {
       "path": "接口核查记录.md",
       "bytes": 3184,
       "sha256": "8da26a118a14e81f9c19789f467d888a338498309899cf85f7716575d2e8bf86"
+    },
+    {
+      "path": "故障记录使用说明.md",
+      "bytes": 5327,
+      "sha256": "64b151b336f13b8fc52206965ae3ef19a6d506f8a17f5644eb4de53dc34d6cec"
+    },
+    {
+      "path": "服务恢复说明.md",
+      "bytes": 3192,
+      "sha256": "d3658a098f9c121fc7f5fd5a06dd5929521fba68794aca85d8c85344a1c64932"
+    },
+    {
+      "path": "登录自启动说明.md",
+      "bytes": 1470,
+      "sha256": "a0c10c226da080a30305bee599baa56c25589121802895ef50e1ae416d1aa3aa"
     },
     {
       "path": "网页版与数据位置.txt",
@@ -533,9 +659,19 @@
       "sha256": "90b2616e3edfb4362148e75bf80818a5c8dfc5e2aa3c435caab68a80a9cc19f3"
     },
     {
+      "path": "运行优先保障说明.md",
+      "bytes": 2415,
+      "sha256": "20b2329dd1e09d6c49a6f74ee6c2cb63e0961ba8a113a585b979a490d0c2322c"
+    },
+    {
+      "path": "预览批量起量升级.cmd",
+      "bytes": 592,
+      "sha256": "e6143017aa5f8379d7445a9bf6ecc4dfda26e3bf794b0f546e36c0d43d97d877"
+    },
+    {
       "path": "验证结果.json",
-      "bytes": 1319,
-      "sha256": "db101496df5016e65dcb4ff8545416c1d581707041a9a58cfa663a1173a1c2ad"
+      "bytes": 500,
+      "sha256": "c69e07d2bb81cc4433cb9e47459c0bd2cbf960061f9ec55f6d7d9bee7bd84088"
     }
   ]
 }
