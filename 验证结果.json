@@ -1,8 +1,8 @@
 {
   "date": "2026-10-07",
-  "branch": "main",
+  "branch": "development/roi-comparison",
   "tests": {
-    "passed": 82,
+    "passed": 89,
     "failed": 0,
     "command": "node --test --test-concurrency=2 tests/*.test.mjs"
   },
@@ -10,12 +10,14 @@
   "npmCi": "passed",
   "isolatedReplayStartup": "passed",
   "scan": {
-    "files": 135,
+    "files": 142,
     "knownCredentialMatches": 0,
     "credentialPatternMatches": 0,
     "excludedRuntimeFiles": 0
   },
   "productionSourceFilesUnchanged": 92,
   "realAccountWrites": false,
-  "notificationsSent": false
+  "notificationsSent": false,
+  "productionAligned": false,
+  "productionBaseline": "56aa13bdfe6ec68d5ffc61a55de0a69633a9238e"
 }

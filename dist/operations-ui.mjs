@@ -13,7 +13,7 @@ export function openPlanOperation(plan,action,{notify,onSuccess,allowWrites=fals
  $('#prepare-operation').onclick=async()=>{
   if(submitting)return;submitting=true;$('#prepare-operation').disabled=true;$('.operation-error').textContent='';
   try{if(!prepared){prepared=await post('/api/operation/prepare',{accountId:ACCOUNT_ID,id:plan.id,action,value:action==='status'?(plan.isEnabled?'pause':'start'):$('#operation-value')?.value});$('.operation-form').innerHTML=`<p class="confirmation-summary">${esc(prepared.description)}</p>${action==='delete'&&prepared.canSubmit?`<label>输入计划ID确认删除<input id="typed-plan-id" autocomplete="off"></label>`:''}<p>${prepared.canSubmit?'确认后会提交到此千川账户。':'当前为只读模式，仅展示变更预览，未向千川提交。'}</p>`;$('#prepare-operation').textContent=prepared.canSubmit?'确认提交':'只读预览，未提交';}
-   else {const r=await post('/api/operation/commit',{token:prepared.token,accountId:ACCOUNT_ID,planId:plan.id,confirmed:true,typedPlanId:$('#typed-plan-id')?.value});if(r.success){notify('平台已确认操作成功');d.close();onSuccess();}}
+   else {const r=await post('/api/operation/commit',{token:prepared.token,accountId:ACCOUNT_ID,planId:plan.id,confirmed:true,typedPlanId:$('#typed-plan-id')?.value});if(r.success){notify(r.observationWarning||'平台已确认操作成功'+(r.observationId?'，已开始24小时ROI对比':''));d.close();onSuccess();}}
   }catch(error){$('.operation-error').textContent=error.message;if(prepared){$('#prepare-operation').textContent='请关闭后重新查看计划';$('#prepare-operation').dataset.failed='true';}else $('#prepare-operation').textContent='重新核对';}
   finally{submitting=false;$('#prepare-operation').disabled=prepared?.canSubmit===false||$('#prepare-operation').dataset.failed==='true';}
  };

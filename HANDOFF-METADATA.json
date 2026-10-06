@@ -4,8 +4,8 @@
   "packagedDate": "2026-10-07",
   "timezone": "Asia/Shanghai",
   "repository": "https://github.com/zeyuan2/qianchuan-replica",
-  "branch": "main",
-  "basis": "Sanitized snapshot of current production source plus applicable synthetic tests and handoff tools",
+  "branch": "development/roi-comparison",
+  "basis": "Sanitized development snapshot including unreleased ROI comparison",
   "productionFiles": 92,
   "sanitizedFiles": [
     "scripts/lan-interface.js",
@@ -43,5 +43,7 @@
   "nodeObserved": "25.8.1",
   "npmObserved": "11.11.0",
   "unreleasedDevelopmentBranch": "development/roi-comparison",
-  "accountPlaceholder": "1000000000000000"
+  "accountPlaceholder": "1000000000000000",
+  "productionAligned": false,
+  "productionBaseline": "56aa13bdfe6ec68d5ffc61a55de0a69633a9238e"
 }

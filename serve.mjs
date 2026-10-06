@@ -13,6 +13,7 @@ import {RangeQueryService} from './server/range-query.mjs';
 import {OperatorAccess} from './server/operator-access.mjs';
 import {BudgetAlerts} from './server/budget-alerts.mjs';
 import {parseTunnelToken} from './server/tunnel-token.mjs';
+import {RoiObservations} from './server/roi-observations.mjs';
 import {readRoiHours} from './server/roi-hours.mjs';
 import {BatchBoost} from './server/batch-boost.mjs';
 const root=fileURLToPath(new URL('./dist/',import.meta.url));
@@ -26,10 +27,12 @@ let operationBusy=false;
 let pairingSwitch=false;
 function requireWriteAccess(req){const session=operators.require(req.headers.cookie);if(!api.allowWrites)throw new BridgeError('请在采集电脑重新加载1.3版千川连接扩展，然后刷新连接页','WRITE_BRIDGE_REQUIRED',409);return session;}
 const budgetAlerts=await new BudgetAlerts({directory:fileURLToPath(new URL('./.runtime/budget-alerts/',import.meta.url))}).init();
-const monitor=await new ProductMonitor({api,directory:fileURLToPath(new URL('./data/monitor/',import.meta.url)),seedFile:fileURLToPath(new URL('./data/snapshots/2026-10-01-preview.json',import.meta.url)),onSnapshot:snapshot=>budgetAlerts.run(snapshot)}).init();
+const monitor=await new ProductMonitor({api,directory:fileURLToPath(new URL('./data/monitor/',import.meta.url)),seedFile:fileURLToPath(new URL('./data/snapshots/2026-10-01-preview.json',import.meta.url)),onSnapshot:snapshot=>{roiObservations.tick();return budgetAlerts.run(snapshot);}}).init();
 const ranges=new RangeQueryService({api,monitor,directory:fileURLToPath(new URL('./data/monitor/ranges/',import.meta.url))});
 const detailCache=new Map();let detailQueue=Promise.resolve(),detailPending=0,detailWindow=Date.now(),detailCount=0;
 const batchBoost=await new BatchBoost({api,directory:fileURLToPath(new URL('./.runtime/batch-boost/',import.meta.url)),beforeRead:async()=>{if(monitor.running)await monitor.running;},isActorActive:actor=>Boolean(operators.state.sessions[actor]?.expiresAt>Date.now()),onComplete:()=>{detailCache.clear();ranges.invalidate();void monitor.run();}}).init();
+const roiObservations=await new RoiObservations({api,directory:fileURLToPath(new URL('./data/roi-changes/',import.meta.url)),beforeRead:async()=>{if(monitor.running)await monitor.running;}}).init();api.roiObservations=roiObservations;
+const withRoiChanges=packet=>({...packet,roiChanges:roiObservations.index()});
 function cachedDetail(q){
  if(q.accountId!==ACCOUNT_ID||!api.planCache.has(String(q.id)))throw new BridgeError('计划不属于当前已采集账户','ACCOUNT_MISMATCH',400);
  if(!['data','product','aweme','material','control','detail','log'].includes(q.tab)||q.eligible)throw new BridgeError('内网只开放计划数据查询','SCOPE_DENIED',400);
@@ -97,14 +100,16 @@ const server=http.createServer(async(req,res)=>{
   }
   if(url.pathname==='/api/health/data'&&req.method==='GET'){const v=monitor.view();return json(res,200,{complete:v.monitor.complete,planCount:v.monitor.collected,total:v.monitor.total,fetchedAt:v.monitor.lastSuccessAt,bridgeConnected:v.monitor.bridgeConnected,captureFailed:Boolean(v.monitor.error)});}
   if(url.pathname==='/api/monitor'&&req.method==='GET'){
-   if(url.searchParams.has('from')||url.searchParams.has('to'))return json(res,200,await ranges.get(url.searchParams.get('from'),url.searchParams.get('to')));
-   return json(res,200,await monitor.forDate(url.searchParams.get('date')));
+   if(url.searchParams.has('from')||url.searchParams.has('to'))return json(res,200,withRoiChanges(await ranges.get(url.searchParams.get('from'),url.searchParams.get('to'))));
+   return json(res,200,withRoiChanges(await monitor.forDate(url.searchParams.get('date'))));
   }
   if(url.pathname==='/api/monitor/refresh'&&req.method==='POST'){
    const last=Date.parse(monitor.status.lastAttemptAt||'');if(monitor.running)return json(res,202,{running:true});
    if(Number.isFinite(last)&&Date.now()-last<30000)return json(res,429,{error:{message:'请等待30秒后再发起采集'}});
    void monitor.run();return json(res,202,{running:true});
   }
+  if(url.pathname==='/api/roi-observations/list'&&req.method==='GET')return json(res,200,{records:roiObservations.list(url.searchParams.get('planId'))});
+  if(url.pathname==='/api/roi-observations/record'&&req.method==='GET')return json(res,200,roiObservations.get(url.searchParams.get('id')));
   if(url.pathname==='/api/monitor/detail'&&req.method==='POST')return json(res,200,await cachedDetail(await readJson(req)));
   if(url.pathname==='/api/pairing'){
    if(origin&&origin!==localOrigin)return json(res,403,{error:{message:'仅本机页面可读取连接码'}});
@@ -155,6 +160,6 @@ server.listen(port,'127.0.0.1',async()=>{
  await mkdir(new URL('./.runtime/',import.meta.url),{recursive:true});
  await writeFile(new URL('./.runtime/connection.json',import.meta.url),JSON.stringify({url:localOrigin,token:bridge.token,accountId:ACCOUNT_ID}));
  console.log(`千川商品复刻：${localOrigin}（${api.replay?'历史样本模式':'真实接口模式'}）`);
- if(!api.replay)monitor.start();
+ if(!api.replay){monitor.start();roiObservations.tick();}
 });
 for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{monitor.stop();bridge.close();server.close(()=>process.exit());});

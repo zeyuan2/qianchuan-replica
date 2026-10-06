@@ -37,6 +37,7 @@ export function createLanServer({host,port,html,assets=new Map(),proxy,publicOri
    if(data.cookie)res.setHeader('Set-Cookie',data.cookie.replace('Path=/api/','Path=/lan-api/')+(publicOrigin?'; Secure':''));
    res.writeHead(data.status,{'Content-Type':'application/json; charset=utf-8'});return res.end(data.body);
   }
+  if(['/lan-api/roi-observations/list','/lan-api/roi-observations/record'].includes(url.pathname)&&req.method==='GET'&&proxy){const key=url.pathname.endsWith('/list')?'planId':'id',value=url.searchParams.get(key);if(value&&!/^[a-zA-Z0-9-]{1,50}$/.test(value)){res.writeHead(400);return res.end('Invalid query');}const data=await proxy(url.pathname.replace('/lan-api/','/api/')+(value?'?'+key+'='+encodeURIComponent(value):''),{method:'GET'});res.writeHead(data.status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});return res.end(data.body);}
   if(url.pathname==='/lan-api/snapshot'&&['GET','HEAD'].includes(req.method)&&proxy){
    const day=url.searchParams.get('date'),from=url.searchParams.get('from'),to=url.searchParams.get('to'),valid=v=>/^\d{4}-\d{2}-\d{2}$/.test(v||'');
    if((day&&!valid(day))||((from||to)&&(!valid(from)||!valid(to)||day))){res.writeHead(400,{'Content-Type':'application/json'});return res.end(JSON.stringify({error:{message:'请选择完整且有效的日期区间'}}));}
@@ -72,7 +73,7 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)){
  const host=process.env.LAN_HOST||'192.168.1.100',port=Number(process.env.LAN_PORT||8088);
  if(!/^(?:192\.168\.|10\.|172\.(?:1[6-9]|2\d|3[01])\.)/.test(host)||!Number.isInteger(port)||port<1024||port>65535)throw new Error('Invalid LAN address or port');
  const html=await readFile(new URL('./dist/lan.html',import.meta.url)),assets=new Map();
- const files=['health-client.js','lan-main.mjs','batch-boost.mjs','batch-model.mjs','lan-data.mjs','lan-plan-detail.mjs','lan-operations-ui.mjs','lan-task-ui.mjs','operator-ui.mjs','metric-picker.mjs','metric-config.mjs','selection-state.mjs','preferences.mjs','top-metric-catalog.mjs','table-metric-catalog.mjs','operations-ui.mjs','task-ui.mjs','poller.mjs','styles.css','scope.css','metric-picker.css','live.css','lan.css','assets/favicon.svg'];
+ const files=['health-client.js','lan-main.mjs','batch-boost.mjs','batch-model.mjs','roi-change-ui.mjs','roi-change-model.mjs','roi-change.css','lan-data.mjs','lan-plan-detail.mjs','lan-operations-ui.mjs','lan-task-ui.mjs','operator-ui.mjs','metric-picker.mjs','metric-config.mjs','selection-state.mjs','preferences.mjs','top-metric-catalog.mjs','table-metric-catalog.mjs','operations-ui.mjs','task-ui.mjs','poller.mjs','styles.css','scope.css','metric-picker.css','live.css','lan.css','assets/favicon.svg'];
  for(const file of files){const type=file.endsWith('.css')?'text/css; charset=utf-8':file.endsWith('.svg')?'image/svg+xml':'text/javascript; charset=utf-8';assets.set('/'+file,{body:await readFile(new URL('./dist/'+file,import.meta.url)),type});}
  const proxy=async(endpoint,options)=>{
   try{const response=await fetch('http://127.0.0.1:5173'+endpoint,{...options,signal:AbortSignal.timeout(65000)});return {status:response.status,body:Buffer.from(await response.arrayBuffer()),cookie:response.headers.get('set-cookie')};}

@@ -19,13 +19,14 @@ export function selectSnapshot(snapshot,q){
  if(q.status&&q.status!=='all'&&q.status!=='30')plans=plans.filter(p=>p.statusText===labels[q.status]||(String(q.status)==='4'&&p.statusText==='已暂停'&&p.raw?.adOptType===1));
  if(q.service&&q.service!=='all'){const label={1:'千川星选素材投放',2:'含达人佣金出价',3:'基础投放'}[q.service];plans=plans.filter(p=>q.serviceMode==='exclude'?!p.service.includes(label):p.service.includes(label));}
  if(q.costStatus&&q.costStatus!=='all')plans=plans.filter(p=>{const metric=p.metrics[norm('stat_cost_for_roi2')],value=Number(metric?.value??metric?.Value);return q.costStatus==='zero'?value===0:value>0;});
+ const roiChanges=snapshot.roiChanges||{byPlan:{},recentPlanIds:[]};const recentRoi=new Set(roiChanges.recentPlanIds);if(q.roiChanged24)plans=plans.filter(p=>recentRoi.has(p.id));
  const events=new Map((snapshot.newPlanEvents||[]).map(e=>[e.id,e]));
  if(q.onlyNew)plans=plans.filter(p=>events.has(p.id));
  const field=q.sortField||'create_time',direction=q.sortType==='asc'?1:-1;
  const value=p=>field==='create_time'?Number(p.raw?.createTime):Number(p.metrics[norm(field)]?.value??p.metrics[norm(field)]?.Value);
  plans.sort((a,b)=>{const av=value(a),bv=value(b);if(!Number.isFinite(av)&&!Number.isFinite(bv))return a.id.localeCompare(b.id);if(!Number.isFinite(av))return 1;if(!Number.isFinite(bv))return -1;return (av-bv)*direction||a.id.localeCompare(b.id);});
  const total=plans.length,pageSize=Math.max(1,Number(q.pageSize)||10),page=Math.max(1,Math.min(Number(q.page)||1,Math.max(1,Math.ceil(total/pageSize))));
- return {...snapshot,accountTotal:snapshot.total,cachedCount:snapshot.plans.length,plans:plans.slice((page-1)*pageSize,page*pageSize).map(p=>({...p,newEvent:events.get(p.id)||null})),total,page,pageSize,allowWrites:false,newEventCount:events.size};
+ return {...snapshot,accountTotal:snapshot.total,cachedCount:snapshot.plans.length,plans:plans.slice((page-1)*pageSize,page*pageSize).map(p=>({...p,newEvent:events.get(p.id)||null,roiChange:roiChanges.byPlan?.[p.id]||null})),total,page,pageSize,allowWrites:false,newEventCount:events.size,roiRecentCount:snapshot.plans.filter(p=>recentRoi.has(p.id)).length};
 }
 async function readCached(url,force){
  if(pending.has(url))return pending.get(url);
@@ -39,5 +40,5 @@ export async function loadLanData(q){
  const packet=await readCached(url,Boolean(q.force));
  if(!packet.snapshot)throw new Error(packet.monitor.error?.message||'正在等待第一轮完整采集');
  const monitor=packet.rangeQuery?{...packet.monitor,lastSuccessAt:packet.snapshot.fetchedAt,nextCaptureAt:packet.rangeQuery.expiresAt,running:false,error:packet.rangeQuery.error||packet.monitor.error}:packet.monitor;
- return {...selectSnapshot(packet.snapshot,q),monitor,rangeQuery:packet.rangeQuery,historical:Boolean(packet.historical)};
+ return {...selectSnapshot({...packet.snapshot,roiChanges:packet.roiChanges},q),monitor,rangeQuery:packet.rangeQuery,historical:Boolean(packet.historical)};
 }

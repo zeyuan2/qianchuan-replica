@@ -21,7 +21,7 @@ export function buildOperation(action,ad,value){
   if(!ad.operation?.roi2GoalOperation?.editable)throw new BridgeError(ad.operation?.roi2GoalOperation?.msg||'此计划不允许修改ROI','OPERATION_DENIED',400);
   const roi=numberText(value,'ROI');if(roi<.01||roi>=10000)throw new BridgeError('ROI需大于等于0.01且小于10000','INVALID_INPUT',400);
   if(roi===Number(ad.ecpRoi2Goal))throw new BridgeError('ROI未变化','NO_CHANGE',400);
-  return {action,id,path:WRITE_PATHS.roi,body:{UpdateRoi2Infos:[{ID:id,value:roi,DeepExternalAction:ad.deepExternalAction,OverallROICostItems:[...(ad.overallRoiCostItems||[])].sort((a,b)=>a-b)}]},description:`综合营销ROI目标：${ad.ecpRoi2Goal} → ${roi}`,before:ad.ecpRoi2Goal,after:roi};
+  return {action,id,path:WRITE_PATHS.roi,body:{UpdateRoi2Infos:[{ID:id,value:roi,DeepExternalAction:ad.deepExternalAction,OverallROICostItems:[...(ad.overallRoiCostItems||[])].sort((a,b)=>a-b)}]},description:`综合营销ROI目标：${ad.ecpRoi2Goal} → ${roi}`,before:Number(ad.ecpRoi2Goal),after:roi};
  }
  if(action==='status'){
   if(!ad.operation?.optStatusOperation?.editable)throw new BridgeError(ad.operation?.optStatusOperation?.msg||'此计划不允许修改投放状态','OPERATION_DENIED',400);
@@ -56,8 +56,10 @@ export async function commitOperation(api,q,actorId){
  let ad;try{({ad}=await planInfo(api,action.id,true));}catch(e){throw Object.assign(e,{writeAttempted:false});}
  if(ad.modifyTime!==action.modifyTime)throw Object.assign(new BridgeError('计划已在其他页面变更，请重新查看后再操作','PLAN_CHANGED',409),{writeAttempted:false});
  if(action.action!=='task')buildOperation(action.action,ad,action.after);
- let response;try{response=await api.call(action.path,action.body,{intent:'write',reqFrom:'replica_product_confirmed_operation'});}catch(error){throw Object.assign(new BridgeError('未能确认提交结果，请先查看千川原页或操作日志，勿直接重复提交。'+error.message,'OPERATION_UNCERTAIN',502),{upstreamCode:error.code,writeAttempted:true});}
+ const observationId=action.action==='roi'&&api.roiObservations?await api.roiObservations.reserve(action):null;
+ let response;try{response=await api.call(action.path,action.body,{intent:'write',reqFrom:'replica_product_confirmed_operation'});}catch(error){if(observationId)await api.roiObservations.unconfirmed(observationId).catch(()=>{});throw Object.assign(new BridgeError('未能确认提交结果，请先查看千川原页或操作日志，勿直接重复提交。'+error.message,'OPERATION_UNCERTAIN',502),{upstreamCode:error.code,writeAttempted:true});}
  const results=response.data?.results??[];
- if(action.action!=='task'&&(!results.length||results.some(r=>!r.flag)))throw new BridgeError(results.find(r=>!r.flag)?.error?.errorMessage||'提交结果尚未明确，请查看千川原页或操作日志后再决定是否重试','OPERATION_UNCERTAIN',502);
- api.detailCache?.delete(action.id);return {success:true,accountId:ACCOUNT_ID,planId:action.id,action:action.action};
+ if(action.action!=='task'&&(!results.length||results.some(r=>!r.flag))){if(observationId)await api.roiObservations.unconfirmed(observationId).catch(()=>{});throw new BridgeError(results.find(r=>!r.flag)?.error?.errorMessage||'提交结果尚未明确，请查看千川原页或操作日志后再决定是否重试','OPERATION_UNCERTAIN',502);}
+ let observationWarning=null;if(observationId)try{await api.roiObservations.confirm(observationId);}catch{observationWarning='ROI已修改成功，但对比记录保存异常；请勿重复提交';}
+ api.detailCache?.delete(action.id);return {success:true,accountId:ACCOUNT_ID,planId:action.id,action:action.action,observationId,observationWarning};
 }

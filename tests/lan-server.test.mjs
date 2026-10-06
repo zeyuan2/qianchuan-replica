@@ -44,5 +44,12 @@ test('LAN monitor exposes snapshots and constrained detail reads but no private 
   assert.equal((await request('/lan-api/detail','POST',{accountId:'other',id:'1000000000000100',tab:'data'})).status,400);
   assert.equal((await request('/lan-api/snapshot','GET',undefined,'https://external.example')).status,403);
   assert.equal(calls.length,2);
+  assert.equal((await request('/lan-api/roi-observations/list')).status,200);
+  assert.equal(calls[2].endpoint,'/api/roi-observations/list');
+  assert.equal((await request('/lan-api/roi-observations/record?id=abc-123')).status,200);
+  assert.equal(calls[3].endpoint,'/api/roi-observations/record?id=abc-123');
+  assert.equal((await request('/lan-api/roi-observations/record?id=../private')).status,400);
+  assert.equal((await request('/lan-api/roi-observation-source','POST',{})).status,405);
+  assert.equal(calls.length,4);
  }finally{await new Promise(r=>server.close(r));}
 });

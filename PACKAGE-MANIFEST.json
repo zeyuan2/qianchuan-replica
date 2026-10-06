@@ -1,7 +1,7 @@
 {
   "algorithm": "SHA-256",
   "date": "2026-10-07",
-  "note": "Excludes itself; sanitized production branch; runtime excluded.",
+  "note": "Excludes itself; sanitized undeployed ROI development branch.",
   "files": [
     {
       "path": ".gitattributes",
@@ -20,8 +20,8 @@
     },
     {
       "path": "HANDOFF-METADATA.json",
-      "bytes": 1465,
-      "sha256": "e4bac53aa1814ee4e3a415f111051d7df093dc790435495e63a1e3da70fc4a8d"
+      "bytes": 1556,
+      "sha256": "4c951752c872c98a68499b49c185d89d485ae5b6dee27c211f79f5b3c674dc45"
     },
     {
       "path": "PACKAGE-EXCLUSIONS.json",
@@ -30,8 +30,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 1578,
-      "sha256": "769f0d3f4ac9b826943579fda562e6c8d85ea5f21aceb87321604e1cce7d9cd2"
+      "bytes": 1758,
+      "sha256": "1d81f89fdf1defd3cf7ca68cef6737f7b50b6a28cd97473a179baaef12def28e"
+    },
+    {
+      "path": "ROI调整对比说明.md",
+      "bytes": 3272,
+      "sha256": "768d124093ebe937511306b34e2744f27e3c8a8c91065e04326e28d29a25f355"
     },
     {
       "path": "SOURCE-FINGERPRINTS.json",
@@ -150,18 +155,18 @@
     },
     {
       "path": "dist/lan-data.mjs",
-      "bytes": 4954,
-      "sha256": "45d477f885a505aceabec3549c2dc20497ec4c5dff93022ade8be52f14dc0255"
+      "bytes": 5278,
+      "sha256": "df36dcd1b145c73ea2cafca413697d0d2a3d1f5e4a9defae1ab038770c3bdfc3"
     },
     {
       "path": "dist/lan-main.mjs",
-      "bytes": 29443,
-      "sha256": "19bdff2d546b276c9b5a0b74ef3a1d19fac426795dc1cdb32e1b1dfafb226dcf"
+      "bytes": 30118,
+      "sha256": "b2e8b467f828ba5145b3fc07822731b2ba50eb99a84eb6fab1b9b4f4478b295b"
     },
     {
       "path": "dist/lan-operations-ui.mjs",
-      "bytes": 3725,
-      "sha256": "7b14f568d51c178b8fe2134743cb87eee5b89a33a2381f59570305bc2d1cfc80"
+      "bytes": 3800,
+      "sha256": "6f92de3fbe42d2065edbe960e7760c8e54b5919c824307dbc6efc98ab0bdbf59"
     },
     {
       "path": "dist/lan-plan-detail.mjs",
@@ -180,8 +185,8 @@
     },
     {
       "path": "dist/lan.html",
-      "bytes": 10884,
-      "sha256": "fede85b537ec3231785fc63c521b19ea3d7b5ad9a0cc891ada003acaef1c70f5"
+      "bytes": 11024,
+      "sha256": "935447c20cfb0808124750ea9ca1e90a98e7f30eb3c4221995d1eae3b04eadb1"
     },
     {
       "path": "dist/live.css",
@@ -225,8 +230,8 @@
     },
     {
       "path": "dist/operations-ui.mjs",
-      "bytes": 3717,
-      "sha256": "f5ed64f846dec1cd11475fd8865f8da11bf04d8866e8ed7f3f2a99267f115c4f"
+      "bytes": 3792,
+      "sha256": "275d2e64bb5fb84c2e6231d83f263678f9c4cfa070b9914d9b224ddf4227e2bd"
     },
     {
       "path": "dist/operator-ui.mjs",
@@ -247,6 +252,21 @@
       "path": "dist/preferences.mjs",
       "bytes": 1376,
       "sha256": "99d5f40bbdc600df9f446bf9e0130c90f404f146ca5a9d71e13461b68ef2becb"
+    },
+    {
+      "path": "dist/roi-change-model.mjs",
+      "bytes": 2415,
+      "sha256": "ef5730bca0889cf77f2ef8b6228bb1ea953ae5a5a3c1c91ece875b20f7c49e1b"
+    },
+    {
+      "path": "dist/roi-change-ui.mjs",
+      "bytes": 8768,
+      "sha256": "8c2f4bbd0a109c8a5dfc5e3236b4da15a55011c561b23831429694c4e2d8c1e4"
+    },
+    {
+      "path": "dist/roi-change.css",
+      "bytes": 2142,
+      "sha256": "8f98b11a34779606195403c6ee735521b3aaebbe3c9b0d18fd84264d62137a25"
     },
     {
       "path": "dist/scope.css",
@@ -330,8 +350,8 @@
     },
     {
       "path": "lan-server.mjs",
-      "bytes": 11030,
-      "sha256": "c525fb6ef287223d93a69a37fab7b0565aa3023eb75df23f5e7dcb338150a9a2"
+      "bytes": 11665,
+      "sha256": "2eeec42c5a70e50b5fe15c96bc24aaa412e4482ad5fecace719235601a58476f"
     },
     {
       "path": "package-lock.json",
@@ -345,13 +365,13 @@
     },
     {
       "path": "public-server.mjs",
-      "bytes": 2386,
-      "sha256": "922e42e1169caf7be60b89d04cb267bee9266de4905217c4b6da712b4b17b9ea"
+      "bytes": 2446,
+      "sha256": "b229677746ebf0cbfb8ddcd5cb9c88e3582e04b2c10b25dfd8df8988709cdb1e"
     },
     {
       "path": "scripts/build-lan.mjs",
-      "bytes": 16140,
-      "sha256": "934b9695846da514349de2d9480b82077b43c56ef469c93a11c7f0d433d252ca"
+      "bytes": 17396,
+      "sha256": "104d34e055119c29f44ad41b0fa41ee1c5f613b79c042dcf98c66547cfaf32a5"
     },
     {
       "path": "scripts/generate-synthetic-fixtures.mjs",
@@ -374,9 +394,14 @@
       "sha256": "88f12b6e4b1350332541e6a38568bb54524d5b0cc484feed42881179e6f7261c"
     },
     {
+      "path": "scripts/preview-roi.mjs",
+      "bytes": 2324,
+      "sha256": "f62c44b2006d35db749ac145d881f20fbfa21789d51403d33f77284f673e221a"
+    },
+    {
       "path": "serve.mjs",
-      "bytes": 17209,
-      "sha256": "a16926b7ad34bcf6ce279187befa9ed3c03c227209267eff4e449fefbf743702"
+      "bytes": 17971,
+      "sha256": "8a0a28eab36a1d1ce3960e0e8cb589c908ef138fb3087113ea75f063c47cf79a"
     },
     {
       "path": "server/api-templates.json",
@@ -455,8 +480,8 @@
     },
     {
       "path": "server/operations.mjs",
-      "bytes": 7104,
-      "sha256": "7a79587a794c9b67f01747e0c9a1b39522db9fb041defe85edc2e2ca3536136c"
+      "bytes": 7626,
+      "sha256": "9e9274ae160c9566be253ea630db2397c9676ab1deeb57598c83816b06286973"
     },
     {
       "path": "server/operator-access.mjs",
@@ -472,6 +497,11 @@
       "path": "server/roi-hours.mjs",
       "bytes": 4396,
       "sha256": "f21c9274e5fd1d9d9f5e29ac8c3a6cdbdbca75a8227b8ab343fb5c285c832214"
+    },
+    {
+      "path": "server/roi-observations.mjs",
+      "bytes": 6195,
+      "sha256": "a32d8e7eaccae22d4c11840ef6bce1601f23aeeb3711942af77cd5ea73aa25c4"
     },
     {
       "path": "server/tasks.mjs",
@@ -560,8 +590,8 @@
     },
     {
       "path": "tests/lan-server.test.mjs",
-      "bytes": 4852,
-      "sha256": "5be2475fced145e41e378e1317780da3461c937265b863166fe4a2e4ce623d2e"
+      "bytes": 5377,
+      "sha256": "2015fb8ce3686eaa50ae3327f945380c485cfaf10c1a2a3b309d12ce8d2b972d"
     },
     {
       "path": "tests/monitor.test.mjs",
@@ -587,6 +617,11 @@
       "path": "tests/public-access.test.mjs",
       "bytes": 4385,
       "sha256": "f1430cc38f8adbfc007bd41877b6806d9d46f735b04e9b78d7fd5011ea87f37c"
+    },
+    {
+      "path": "tests/roi-observations.test.mjs",
+      "bytes": 8430,
+      "sha256": "a9a834536d27de8f4a861dcf058e7c138d7efad5e0a24eede99e209c5004a5e0"
     },
     {
       "path": "watch-services.ps1",
@@ -670,8 +705,8 @@
     },
     {
       "path": "验证结果.json",
-      "bytes": 500,
-      "sha256": "c69e07d2bb81cc4433cb9e47459c0bd2cbf960061f9ec55f6d7d9bee7bd84088"
+      "bytes": 622,
+      "sha256": "2f3661c120fc20463de5f6bdfe96be5fe8980b1499630c18ba2b9257a1a4cc0a"
     }
   ]
 }
