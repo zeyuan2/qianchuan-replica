@@ -1,7 +1,10 @@
 import fs from 'node:fs/promises';
 import {ACCOUNT_ID,PATHS,metricMap} from './api.mjs';
 import {planInfo,DETAIL_PATHS} from './details.mjs';
+import {readRoiHours} from './roi-hours.mjs';
+import {aggregateHourlyWindow} from './automation-windows.mjs';
 import {BoostState} from './boost-state.mjs';
+import {classifyAutomationPlan,actionPermitted} from './automation-plan-state.mjs';
 import {parsePlanHistory} from './automation-history.mjs';
 import {localDay,DAY} from './automation-policy.mjs';
 import {prepareOperation,commitOperation,buildOperation} from './operations.mjs';
@@ -25,7 +28,7 @@ export class AutomationLive {
   const fresh=ads[0],{ad}=await planInfo(this.api,id,true);if(this.gapMs)await wait(this.gapMs);this.lastAds.set(id,ad);
   if(Number(fresh.budget)!==Number(ad.budget)||Number(fresh.ecpRoi2Goal)!==Number(ad.ecpRoi2Goal))throw failure('SETTING_CHANGED_DURING_READ');
   const metric=metricMap(data.adStatsMap?.[id]?.metrics||{}).get('statcostforroi2primary');
-  const plan={id,accountId:ACCOUNT_ID,name:String(ad.name||fresh.name||''),source:'live',verified:true,readAt:this.clock(),active:fresh.adOptType===0&&fresh.adDeliveryName==='投放中',auditPassed:fresh.adDeliveryName==='投放中',status:fresh.adDeliveryName,roi:numeric(ad.ecpRoi2Goal),budget:Number(ad.budget)/100000,basicSpend:numeric(metric?.value??metric?.Value),spendDay:day,createdAt:Number(ad.createTime)*1000,boostState:'unknown'};
+  const plan={id,accountId:ACCOUNT_ID,name:String(ad.name||fresh.name||''),source:'live',verified:true,readAt:this.clock(),...classifyAutomationPlan(fresh,ad),status:fresh.adDeliveryName,roi:numeric(ad.ecpRoi2Goal),budget:Number(ad.budget)/100000,basicSpend:numeric(metric?.value??metric?.Value),spendDay:day,createdAt:Number(ad.createTime)*1000,boostState:'unknown'};
   const logs=await this.logs(id,plan.createdAt);plan.history=parsePlanHistory(logs.rows,{...plan,readAt:this.clock(),complete:logs.complete});plan.readAt=this.clock();return plan;
  }
  async logs(id,createdAt){
@@ -39,7 +42,7 @@ export class AutomationLive {
   }throw failure('LOG_PAGE_LIMIT');
  }
  async inspectBoost(id,since){this.scope(id);return this.boost.inspect(id,{force:true,since:since?new Date(since).toISOString():undefined});}
- validate(plan,action){this.scope(plan.id);const ad=this.lastAds.get(plan.id);if(!ad)throw failure('LIVE_STATE_NOT_FRESH');if(action.budget!==undefined&&action.kind!=='boost'&&action.budget!==plan.budget)buildOperation('budget',ad,String(action.budget));if(action.roi!==undefined&&action.roi!==plan.roi)buildOperation('roi',ad,String(action.roi));}
+ validate(plan,action){this.scope(plan.id);if(!actionPermitted(plan,action))throw failure('PLATFORM_OPERATION_DENIED');const ad=this.lastAds.get(plan.id);if(!ad)throw failure('LIVE_STATE_NOT_FRESH');if(action.budget!==undefined&&action.kind!=='boost'&&action.budget!==plan.budget)buildOperation('budget',ad,String(action.budget));if(action.roi!==undefined&&action.roi!==plan.roi)buildOperation('roi',ad,String(action.roi));}
  async prepare(id,field,value){this.scope(id);return prepareOperation(this.api,{accountId:ACCOUNT_ID,id,action:field,value},'automation:'+id);}
  async commit(id,prepared){this.scope(id);return commitOperation(this.api,{accountId:ACCOUNT_ID,planId:id,token:prepared.token,confirmed:true},'automation:'+id);}
  async rawWindow(id,start,end){
@@ -50,5 +53,13 @@ export class AutomationLive {
   const a=metricMap(overall.data?.StatsData?.Totals||{}),b=metricMap(primary.data?.StatsData?.Totals||{}),value=(map,k)=>numeric(map.get(k)?.Value??map.get(k)?.value);
   return {start,end,accountId:ACCOUNT_ID,planId:id,metricDefinition:'overall-net/overall-cost;fork1-primary',revenue:value(a,'totalordersettleamountforroi21h'),roiCost:value(a,'statcostforoverallroi2'),basicSpend:value(b,'statcostforroi2'),complete:false,precisionVerified:false};
  }
- async window(){throw failure('EXACT_WINDOW_PRECISION_UNVERIFIED');}
+ async window(id,start,end){
+  if(this.windowMode!=='full-hour')throw failure('EXACT_WINDOW_PRECISION_UNSUPPORTED');
+  this.scope(id);const result=await readRoiHours(this.api,{accountId:ACCOUNT_ID,id,from:new Date(start).toISOString(),to:new Date(end).toISOString()},{clock:this.clock,gapMs:this.gapMs});
+  const createdAt=Number(this.lastAds.get(id)?.createTime)*1000;
+  const present=new Set(result.rows.map(r=>r.time));
+  // The plan did not exist in these complete hours; missing later hours remain errors.
+  for(let time=start;time<end;time+=3600000)if(!present.has(time)&&Number.isFinite(createdAt)&&time+3600000<=createdAt)result.rows.push({time,spend:0,revenue:0,roiCost:0,full:true,preCreation:true});
+  return aggregateHourlyWindow(result,{accountId:ACCOUNT_ID,planId:id,start,end});
+ }
 }

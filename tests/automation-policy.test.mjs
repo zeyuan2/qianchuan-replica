@@ -41,16 +41,16 @@ test('enrollment evaluates cold plans immediately without waiting for midnight o
   const d=decide(enrollment,plan({createdAt:now-2*HOUR,approvedAt}),state(),now);
   assert.deepEqual(d,{kind:'roi-budget',roi:2.2,budget:600,reason:'COLD_ADVANCE'});
  }
- assert.equal(decide(enrollment,plan({createdAt:now-1000,approvedAt:now-1000}),state({lastRoiChangedAt:now-1000}),now).reason,'ROI_INTERVAL_NOT_READY');
+ assert.equal(decide(enrollment,plan({createdAt:now-1000,approvedAt:now-1000}),state({lastRoiChangedAt:now-1000}),now).reason,'COLD_BUDGET_AHEAD');
  assert.equal(decide(enrollment,plan({basicSpend:239.99,approvedAt:null}),state(),now).reason,'SPEND_BELOW_THRESHOLD');
  assert.equal(decide(enrollment,plan({auditPassed:false,approvedAt:null}),state(),now).reason,'PLAN_PAUSED_OR_UNAPPROVED');
  assert.equal(localDay(dayStart(now)),'2026-10-07');
 });
 
-test('cold target clips to 3.1 and switches budget to exactly 1000',()=>{
+test('cold target clips to 3.1 without reducing the existing budget',()=>{
  for(const roi of [2.9,2.95,3,3.09]){
   const d=decide(enrollment,plan({roi,budget:1800,basicSpend:1440}),state(),now);
-  assert.equal(d.roi,3.1);assert.equal(d.budget,1000);assert.equal(d.reason,'ENTER_STABLE');
+  assert.equal(d.roi,3.1);assert.equal(d.budget,1800);assert.equal(d.reason,'ENTER_STABLE');
  }
 });
 test('daily reset changes only cold budget and is idempotent',()=>{
@@ -123,10 +123,26 @@ test('completed observation gates exploration and verified rollback; no historic
  const p=plan({roi:3.3,budget:2000,basicSpend:1600});
  const observation={start:now-DAY,end:now,roiChangedAt:now-DAY,roi:3.3,evaluation:null};
  const s=state({lastRoiChangedAt:now-DAY,observation});
- assert.equal(decide(enrollment,p,s,now).reason,'WAITING_FOR_COMPLETE_24H_DATA');
+ assert.equal(decide(enrollment,p,s,now).reason,'WINDOW_DATA_BUDGET_ONLY');
  const d=evaluation=>decide(enrollment,p,{...s,observation:{...observation,evaluation}},now);
  assert.equal(d({decision:'explore'}).roi,3.5);assert.equal(d({decision:'hold'}).kind,'budget');
  assert.equal(d({decision:'rollback'}).reason,'NO_VERIFIED_ROLLBACK_TARGET');
- s.goodSettings=[{at:now-DAY-1,roi:3.1,actualRoi:3.5,complete:true}];
+ s.goodSettings=[{at:now-DAY,roi:3.1,actualRoi:3.5,complete:true}];
  assert.equal(d({decision:'rollback'}).roi,3.1);
+});
+
+
+test('budget-first cold adjustments accumulate tickets and catch up without another spend trigger',()=>{
+ const p=plan({roi:2.5}),initial=state({lastRoiChangedAt:now-30*60000});
+ const action=decide(enrollment,p,initial,now);assert.equal(action.kind,'budget');assert.equal(action.budget,600);assert.equal(action.deferredRoiTarget,2.7);
+ const next=confirmedChange(initial,{before:p,after:{...p,budget:600},at:now,source:'automation',reason:action.reason,deferredRoiTarget:action.deferredRoiTarget});
+ assert.equal(next.pendingRoi.target,2.7);const again=decide(enrollment,{...p,budget:600,basicSpend:590},next,now);assert.equal(again.reason,'COLD_BUDGET_AHEAD');assert.equal(again.deferredRoiTarget,2.9);const queued=confirmedChange(next,{before:{...p,budget:600},after:{...p,budget:900},at:now+1,source:'automation',reason:again.reason,deferredRoiTarget:again.deferredRoiTarget});assert.equal(queued.pendingRoi.queue.length,2);
+ const later=now+31*60000,result=decide(enrollment,{...p,budget:600,basicSpend:250,readAt:later},next,later);assert.deepEqual(result,{kind:'roi',roi:2.7,reason:'COLD_ROI_CATCH_UP'});
+ const done=confirmedChange(queued,{before:{...p,budget:900},after:{...p,budget:900,roi:2.7},at:later,source:'automation',reason:result.reason});assert.equal(done.pendingRoi.target,2.9);assert.equal(done.pendingRoi.queue.length,1);assert.equal(decide(enrollment,{...p,roi:2.7,budget:900,readAt:later},done,later).reason,'WAITING_FOR_DEFERRED_ROI');
+});
+
+test('deferred stable entry respects a midnight budget reset and never reduces budget',()=>{
+ const p=plan({roi:2.9,budget:300}),s=state({pendingRoi:{beforeRoi:2.9,target:3.1,roiChangedAt:now-2*HOUR}});
+ assert.equal(decide(enrollment,p,s,now).budget,1000);assert.equal(decide(enrollment,{...p,budget:2000},s,now).budget,2000);
+ const high=decide(enrollment,plan({roi:2.9,budget:2000,basicSpend:1600}),state({lastRoiChangedAt:now-1}),now);assert.equal(high.budget,2300);assert.equal(high.deferredRoiTarget,3.1);
 });

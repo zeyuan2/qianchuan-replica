@@ -3,7 +3,7 @@
 export const HOUR = 3600000;
 export const DAY = 24 * HOUR;
 export const RULES = Object.freeze({
-  version: '2026-10-07.2', timezone: 'Asia/Shanghai',
+  version: '2026-10-08.1', timezone: 'Asia/Shanghai',
   threshold: 0.8, stableRoi: 3.1, roiStep: 0.2,
   coldBudget: 300, coldStep: 300, stableBudget: 1000,
   stableStep: 1000, maxBudget: 10000,
@@ -25,6 +25,7 @@ export function validateEnrollment(enrollment) {
       new Set(enrollment.planIds).size !== enrollment.planIds.length) {
     throw new Error('AUTOMATION_ENROLLMENT_INVALID');
   }
+  if(enrollment.windowMode!==undefined&&!['exact','full-hour'].includes(enrollment.windowMode))throw new Error('AUTOMATION_WINDOW_MODE_INVALID');
   return enrollment;
 }
 
@@ -54,8 +55,9 @@ export function windowTotals(window) {
 
 export function evaluateWindows(before, after, now) {
   const a = windowTotals(before), b = windowTotals(after);
+  const aligned=before.precision==='full-hour'&&after.precision==='full-hour'&&finite(before.comparisonAnchor)&&before.comparisonAnchor===after.comparisonAnchor&&before.end===Math.floor(before.comparisonAnchor/HOUR)*HOUR&&after.start===Math.ceil(after.comparisonAnchor/HOUR)*HOUR;
   if (before.accountId !== after.accountId || before.planId !== after.planId ||
-      before.metricDefinition !== after.metricDefinition || before.end !== after.start ||
+      before.metricDefinition !== after.metricDefinition || (!aligned&&before.end !== after.start) ||
       after.end > now || before.settingsStable !== true || after.settingsStable !== true) {
     throw new Error('AUTOMATION_WINDOWS_NOT_COMPARABLE');
   }
@@ -77,7 +79,7 @@ function guards(enrollment, plan, state, now) {
   if (plan.source !== 'live' || plan.verified !== true || !finite(plan.readAt) ||
       plan.readAt > now || now - plan.readAt > 5 * 60000) return block('LIVE_STATE_NOT_FRESH');
   if (state?.pendingWrite || state?.uncertainWrite) return block('PREVIOUS_WRITE_UNRESOLVED');
-  if (plan.active !== true || plan.auditPassed !== true) return block('PLAN_PAUSED_OR_UNAPPROVED');
+  if (plan.active !== true || plan.auditPassed !== true) return block(plan.reason||'PLAN_PAUSED_OR_UNAPPROVED');
   if (!finite(plan.roi) || plan.roi <= 0 || !finite(plan.budget) || plan.budget < 300 ||
       !finite(plan.basicSpend) || plan.basicSpend < 0 || plan.spendDay !== localDay(now)) return block('PLAN_METRICS_INVALID');
   return null;
@@ -95,6 +97,7 @@ export function decide(enrollment, plan, state = {}, now = Date.now(), event = '
     return {kind: 'budget', budget: RULES.coldBudget, reason: 'COLD_DAILY_RESET', eventKey: key};
   }
   if (event === 'boost-morning' || event === 'boost-evening') {
+    if(plan.deliveryBlocked)return block('GROUP_BUDGET_EXHAUSTED');
     if (!finite(plan.createdAt) || plan.createdAt <= 0 || plan.createdAt > now) return block('CREATION_TIME_UNKNOWN');
     if (plan.roi >= RULES.stableRoi || now - plan.createdAt >= 3 * DAY || state.boostPermanentlyStopped === true) return wait('BOOST_STOP_CONDITION');
     if (event === 'boost-morning' && localDay(plan.createdAt) !== localDay(now - DAY)) return wait('NOT_CREATED_YESTERDAY');
@@ -104,13 +107,30 @@ export function decide(enrollment, plan, state = {}, now = Date.now(), event = '
   }
   if (event !== 'capture') return block('UNKNOWN_EVENT');
   const roiReady = roiIntervalReady(state.lastRoiChangedAt, now);
+  if (state.pendingRoi) {
+    const due=state.pendingRoi,queue=due.queue||[due];
+    if(due.beforeRoi!==plan.roi||due.roiChangedAt!==state.lastRoiChangedAt||!queue.length||queue.some((v,i)=>!finite(v.target)||v.target<=plan.roi||v.target>RULES.stableRoi||i>0&&v.target<queue[i-1].target))return block('DEFERRED_ROI_NEEDS_REVIEW');
+    if(roiReady)return due.target===RULES.stableRoi
+      ? {kind:'roi-budget',roi:due.target,budget:Math.max(plan.budget,RULES.stableBudget),reason:'COLD_ROI_CATCH_UP'}
+      : {kind:'roi',roi:due.target,reason:'COLD_ROI_CATCH_UP'};
+    if(spendReached(plan.budget,plan.basicSpend)&&plan.budget<RULES.maxBudget){
+      const target=Math.min(RULES.stableRoi,round(queue.at(-1).target+RULES.roiStep));
+      return {kind:'budget',budget:Math.min(RULES.maxBudget,Math.max(plan.budget+RULES.coldStep,target===RULES.stableRoi?RULES.stableBudget:0)),deferredRoiTarget:target,reason:'COLD_BUDGET_AHEAD'};
+    }
+    return wait('WAITING_FOR_DEFERRED_ROI');
+  }
   if (plan.roi < RULES.stableRoi) {
-    // Enrollment begins live evaluation immediately; approval must be current,
-    // but its timestamp is not a prerequisite for entering the policy.
     if (!spendReached(plan.budget, plan.basicSpend)) return wait('SPEND_BELOW_THRESHOLD');
-    if (!roiReady) return wait('ROI_INTERVAL_NOT_READY');
     const roi = Math.min(RULES.stableRoi, round(plan.roi + RULES.roiStep));
-    const budget = roi === RULES.stableRoi ? RULES.stableBudget : Math.min(RULES.maxBudget, plan.budget + RULES.coldStep);
+    if (!roiReady) {
+      // Each verified budget-first adjustment adds one deferred ROI ticket.
+      // Later ROI steps follow the hour interval independently of spend thresholds.
+      if (!finite(state.lastRoiChangedAt) || state.lastRoiChangedAt<=0 || state.lastRoiChangedAt>now) return block('ROI_CHANGE_TIME_UNKNOWN');
+      if (plan.budget >= RULES.maxBudget) return wait('BUDGET_CAP_REACHED');
+      const budget=Math.min(RULES.maxBudget,Math.max(plan.budget+RULES.coldStep,roi===RULES.stableRoi?RULES.stableBudget:0));
+      return {kind:'budget',budget,deferredRoiTarget:roi,reason:'COLD_BUDGET_AHEAD'};
+    }
+    const budget = roi === RULES.stableRoi ? Math.max(plan.budget,RULES.stableBudget) : Math.min(RULES.maxBudget, plan.budget + RULES.coldStep);
     return {kind: 'roi-budget', roi, budget, reason: roi === RULES.stableRoi ? 'ENTER_STABLE' : 'COLD_ADVANCE'};
   }
   // Evaluation must be tied to this exact current ROI epoch, not an old score.
@@ -120,12 +140,12 @@ export function decide(enrollment, plan, state = {}, now = Date.now(), event = '
       !finite(observation.start) || !finite(observation.end) || observation.end - observation.start !== DAY) {
     return block('STABLE_OBSERVATION_NOT_INITIALIZED');
   }
-  if (now >= observation.end && !observation.evaluation) return wait('WAITING_FOR_COMPLETE_24H_DATA');
+  const missingWindow=now >= observation.end && !observation.evaluation;
   const evaluation = observation.evaluation;
   if (evaluation && now < observation.end) return block('PREMATURE_EVALUATION');
   if (evaluation?.decision === 'rollback') {
     if (!roiReady) return wait('ROI_INTERVAL_NOT_READY');
-    const good = state.goodSettings?.filter(v => v.complete === true && finite(v.at) && v.at < observation.start &&
+    const good = state.goodSettings?.filter(v => v.complete === true && finite(v.at) && v.at <= observation.start &&
       finite(v.roi) && v.roi >= RULES.stableRoi && v.roi !== plan.roi &&
       finite(v.actualRoi) && v.actualRoi >= RULES.stableRoi).sort((a,b) => b.at - a.at)[0];
     if (!good) return block('NO_VERIFIED_ROLLBACK_TARGET');
@@ -139,12 +159,12 @@ export function decide(enrollment, plan, state = {}, now = Date.now(), event = '
     if (!roiReady) return wait('ROI_INTERVAL_NOT_READY');
     return {kind: 'roi-budget', roi: round(plan.roi + RULES.roiStep), budget, reason: 'STABLE_EXPLORE'};
   }
-  return {kind: 'budget', budget, reason: evaluation?.decision === 'hold' ? 'STABLE_HOLD' : 'OBSERVATION_BUDGET_ONLY'};
+  return {kind: 'budget', budget, reason: missingWindow ? 'WINDOW_DATA_BUDGET_ONLY' : evaluation?.decision === 'hold' ? 'STABLE_HOLD' : 'OBSERVATION_BUDGET_ONLY'};
 }
 
 // Invoke only after read-after-write confirms the change. A request or timeout
 // is not a confirmed change and must never advance automation state.
-export function confirmedChange(state, {before, after, at, source, reason}) {
+export function confirmedChange(state, {before, after, at, source, reason, deferredRoiTarget, transactionId}) {
   if (!finite(at) || !['manual','automation'].includes(source) || before.id !== after.id ||
       before.accountId !== after.accountId || !finite(before.roi) || !finite(after.roi) ||
       !finite(before.budget) || !finite(after.budget)) throw new Error('CONFIRMED_CHANGE_INVALID');
@@ -153,12 +173,22 @@ export function confirmedChange(state, {before, after, at, source, reason}) {
   if (after.roi >= RULES.stableRoi) next.boostPermanentlyStopped = true;
   next.budgetChanges = [...(next.budgetChanges || []), {at, before:before.budget, after:after.budget, source}].slice(-200);
   if (before.roi !== after.roi) {
+    const queue=next.pendingRoi?(next.pendingRoi.queue||[next.pendingRoi]):[];
+    const retain=source==='automation'&&reason==='COLD_ROI_CATCH_UP'&&after.roi<RULES.stableRoi?queue.filter(v=>v.target>after.roi):[];
+    next.deferredRoiHistory=[...(next.deferredRoiHistory||[]),...queue.filter(v=>!retain.includes(v)).map(v=>({...v,resolvedAt:at,resolution:source==='automation'&&reason==='COLD_ROI_CATCH_UP'?'target_reached':'roi_changed',actualRoi:after.roi}))].slice(-100);
+    next.pendingRoi=retain.length?{...retain[0],beforeRoi:after.roi,roiChangedAt:at,queue:retain}:null;
     next.lastRoiChangedAt = at;
     next.observation = after.roi >= RULES.stableRoi ? {start:at,end:at+DAY,roiChangedAt:at,roi:after.roi,evaluation:null} : null;
   }
+  if(reason==='COLD_BUDGET_AHEAD'){
+    if(!finite(deferredRoiTarget)||deferredRoiTarget<=after.roi||deferredRoiTarget>RULES.stableRoi||after.budget<=before.budget||after.roi!==before.roi)throw new Error('DEFERRED_ROI_INVALID');
+    const ticket={transactionId:transactionId||null,target:deferredRoiTarget,createdAt:at,budgetBefore:before.budget,budgetAfter:after.budget};
+    const queue=[...(next.pendingRoi?(next.pendingRoi.queue||[next.pendingRoi]):[]),ticket];
+    next.pendingRoi={...queue[0],beforeRoi:after.roi,roiChangedAt:next.lastRoiChangedAt,queue};
+  }
   // Track the factual same-day 300->600->900 chain, not a cross-day stage.
   if (reason === 'COLD_DAILY_RESET') next.coldBudgetChain = {day, current:300};
-  if (reason === 'COLD_ADVANCE' && source === 'automation') {
+  if (['COLD_ADVANCE','COLD_BUDGET_AHEAD'].includes(reason) && source === 'automation') {
     if (before.budget === 300 && after.budget === 600) next.coldBudgetChain = {day,current:600};
     else if (next.coldBudgetChain?.day === day && next.coldBudgetChain.current === 600 &&
              before.budget === 600 && after.budget === 900) {

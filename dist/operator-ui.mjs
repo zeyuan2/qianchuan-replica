@@ -5,11 +5,11 @@ export function operatorEnabled(){return state.authenticated&&state.writeReady;}
 export async function refreshOperator(){state=await request('/operator/status');render();return state;}
 function render(){const button=document.getElementById('operator-login'),logout=document.getElementById('operator-logout');if(button){button.textContent=state.authenticated?'操作已登录':'操作登录';button.classList.toggle('authenticated',state.authenticated);button.title=state.authenticated?'保持登录，可继续操作；每次提交前核对变更':'输入操作密码后可编辑计划';}if(logout)logout.hidden=!state.authenticated;}
 export function initializeOperator(notify){document.getElementById('operator-login').onclick=()=>void ensureOperator().catch(e=>notify(e.message));document.getElementById('operator-logout').onclick=async()=>{try{await request('/operator/logout',{});await refreshOperator();notify('已退出操作登录，仍可查看数据');}catch(e){notify(e.message);}};void refreshOperator().catch(()=>{});}
-export async function ensureOperator(){
+export async function ensureOperator({readOnly=false}={}){
  await refreshOperator();
  if(!state.configured){notice('尚未设置操作密码','请在采集电脑打开 http://127.0.0.1:5173/connect.html，设置独立的操作密码。设置后，内网用户可在此登录。');return false;}
  if(!state.authenticated){if(!loginPromise)loginPromise=login().finally(()=>loginPromise=null);if(!await loginPromise)return false;await refreshOperator();}
- if(!state.writeReady){notice('操作连接待更新','操作登录已保留。请在采集电脑的 Chrome 扩展管理页重新加载“千川商品本机连接”（1.3.0），并保持目标账户商品页打开。更新完成后可继续操作。');return false;}
+ if(!readOnly&&!state.writeReady){notice('操作连接待更新','操作登录已保留。请在采集电脑的 Chrome 扩展管理页重新加载“千川商品本机连接”（1.3.0），并保持目标账户商品页打开。更新完成后可继续操作。');return false;}
  return true;
 }
 function notice(title,text){const d=document.createElement('dialog');d.className='operation-dialog';d.innerHTML='<header><h2></h2></header><p></p><footer><button type="button">知道了</button></footer>';d.querySelector('h2').textContent=title;d.querySelector('p').textContent=text;document.body.append(d);d.showModal();d.querySelector('button').onclick=()=>d.close();d.onclose=()=>d.remove();}

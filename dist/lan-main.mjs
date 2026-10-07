@@ -1,3 +1,4 @@
+import {initializeAutomationRecovery} from './automation-recovery.mjs';
 import {openBatchBoost} from './batch-boost.mjs';
 import {openTaskForm} from './lan-task-ui.mjs';
 import {initializeOperator,ensureOperator,operatorEnabled} from './operator-ui.mjs';
@@ -165,3 +166,5 @@ function showAppliedRange(data){
 }
 
 $('#batch-boost').onclick=()=>openBatchBoost({from:model.from||getAppliedRange().from,to:model.to||getAppliedRange().to,selectedIds:[...selectedPlans],notify:toast,onSuccess:()=>poller.invalidate()});
+
+initializeAutomationRecovery(toast);

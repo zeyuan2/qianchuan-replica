@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {atomicJson} from './monitor.mjs';
-import {RULES,DAY,HOUR,localDay,dayStart,validateEnrollment,decide,confirmedChange,evaluateWindows} from './automation-policy.mjs';
+import {RULES,DAY,HOUR,localDay,dayStart,validateEnrollment,decide,confirmedChange,evaluateWindows,windowTotals} from './automation-policy.mjs';
+import {comparisonWindows} from './automation-windows.mjs';
 import {approvalDayEvidence} from './automation-history.mjs';
 export const SLOT_GRACE_MS=5*60000;
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -15,8 +16,8 @@ export class AutomationEngine {
  async init(){
   try{await fs.mkdir(path.join(this.directory,'journal'),{recursive:true});this.config=JSON.parse(await fs.readFile(path.join(this.directory,'config.json'),'utf8'));validateEnrollment(this.config);if(this.config.accountId!==this.accountId||this.config.planIds.some(id=>!this.allowedIds.has(id)))throw error('ENROLLMENT_SCOPE_MISMATCH');
    try{this.state=JSON.parse(await fs.readFile(path.join(this.directory,'state.json'),'utf8'));if(this.state.accountId!==this.accountId||!this.state.plans||!Array.isArray(this.state.applied))throw error('AUTOMATION_STATE_INVALID');}catch(e){if(e.code!=='ENOENT')throw e;}
-   const recovered=[];for(const file of await fs.readdir(path.join(this.directory,'journal'))){if(!/^[a-f0-9-]{36}\.json$/.test(file))continue;const j=JSON.parse(await fs.readFile(path.join(this.directory,'journal',file),'utf8'));if(j.accountId!==this.accountId||!this.config.planIds.includes(j.planId))throw error('JOURNAL_SCOPE_INVALID');recovered.push(j);}for(const j of recovered.sort((a,b)=>a.startedAt-b.startedAt)){this.journal.set(j.id,j);const s=this.planState(j.planId);if(j.status==='confirmed')this.applyJournal(j);else if(j.status!=='rejected'&&j.status!=='cancelled'){if(!j.steps.some(v=>v.startedAt)){j.status='cancelled';await this.saveJournal(j);}else{s.pendingWrite=j.id;s.uncertainWrite=j.id;if(!this.state.pilotVerifiedAt)this.state.pilotPendingTx=j.id;}}}
-   this.state.accountId=this.accountId;await this.save();
+   const recovered=[];for(const file of await fs.readdir(path.join(this.directory,'journal'))){if(!/^[a-f0-9-]{36}\.json$/.test(file))continue;const j=JSON.parse(await fs.readFile(path.join(this.directory,'journal',file),'utf8'));if(j.accountId!==this.accountId||!this.config.planIds.includes(j.planId))throw error('JOURNAL_SCOPE_INVALID');recovered.push(j);}for(const j of recovered.sort((a,b)=>a.startedAt-b.startedAt)){this.journal.set(j.id,j);const s=this.planState(j.planId);if(['resolved','rejected','cancelled'].includes(j.status)&&s.pendingWrite===j.id){s.pendingWrite=null;s.uncertainWrite=null;if(this.state.pilotPendingTx===j.id)this.state.pilotPendingTx=null;}if(j.status==='confirmed')this.applyJournal(j);else if(j.status!=='rejected'&&j.status!=='cancelled'&&j.status!=='resolved'){if(!j.steps.some(v=>v.startedAt)){j.status='cancelled';await this.saveJournal(j);}else{s.pendingWrite=j.id;s.uncertainWrite=j.id;if(!this.state.pilotVerifiedAt)this.state.pilotPendingTx=j.id;}}}
+   this.reader.windowMode=this.config.windowMode||'exact';this.state.accountId=this.accountId;await this.save();
   }catch(e){if(e.code!=='ENOENT'){this.startupError=e.code||'AUTOMATION_STORAGE_INVALID';}this.config.enabled=false;}
   return this;
  }
@@ -32,6 +33,9 @@ export class AutomationEngine {
    if(fact.field==='budget'&&!fact.initial){const own=[...this.journal.values()].some(j=>j.planId===plan.id&&j.steps.some(v=>v.field==='budget'&&v.status==='confirmed'&&v.changedAt===fact.at&&v.before===fact.before&&v.target===fact.after));if(!own)s.coldBudgetChain=null;}
    s.knownFacts.push(fact.key);s.facts.push({...fact,source:'platform-log'});
   }}
+  if(s.pendingRoi&&(s.pendingRoi.beforeRoi!==plan.roi||s.pendingRoi.roiChangedAt!==h.lastRoiChangedAt)){
+   s.deferredRoiHistory=[...(s.deferredRoiHistory||[]),{...s.pendingRoi,resolvedAt:this.clock(),resolution:'superseded_by_platform_roi',actualRoi:plan.roi}].slice(-100);s.pendingRoi=null;
+  }
   if(s.lastRoiChangedAt!==h.lastRoiChangedAt){
    s.lastRoiChangedAt=h.lastRoiChangedAt;
    // Initial stable enrollment must accumulate evidence, not invent a past result.
@@ -43,23 +47,40 @@ export class AutomationEngine {
   // Existing verified stop facts are permanent. Unknown historical chains block boosts.
   s.boostHistoryVerified=h.boostHistoryVerified||s.boostPermanentlyStopped===true;
 
-  s.lastSeen={...minimal(plan),readAt:plan.readAt,basicSpend:plan.basicSpend,status:plan.status,createdAt:plan.createdAt};s.knownFacts=s.knownFacts.slice(-5000);s.facts=s.facts.slice(-5000);plan.approvalWindow=s.approvalWindow;
+  s.lastSeen={...minimal(plan),readAt:plan.readAt,basicSpend:plan.basicSpend,status:plan.status,deliveryCode:plan.deliveryCode,operationCode:plan.operationCode,permissions:plan.permissions,auditEvidence:plan.auditEvidence,stateReason:plan.reason,warning:plan.warning,createdAt:plan.createdAt};s.knownFacts=s.knownFacts.slice(-5000);s.facts=s.facts.slice(-5000);plan.approvalWindow=s.approvalWindow;
  }
  async evaluate(plan,s){
-  const o=s.observation;if(plan.roi<RULES.stableRoi||!o||o.evaluation||this.clock()<o.end)return;
+  const o=s.observation;if(plan.roi<RULES.stableRoi||!o||o.evaluation)return;
+  const ranges=comparisonWindows(o,this.config.windowMode||'exact');o.ranges=ranges;
+  if(this.clock()<ranges.after.end||o.lastAttemptAt&&this.clock()-o.lastAttemptAt<300000)return;o.lastAttemptAt=this.clock();
   try{
-   const before=await this.reader.window(plan.id,o.start-DAY,o.start),after=await this.reader.window(plan.id,o.start,o.end);
    const stable=(a,b)=>!s.facts.some(f=>f.field==='roi'&&!f.initial&&f.before!==f.after&&f.at>a&&f.at<b);
-   before.settingsStable=stable(before.start,before.end);after.settingsStable=stable(after.start,after.end);
-   const evaluation=evaluateWindows(before,after,this.clock());o.evaluation=evaluation;s.evaluationError=null;
-   if(after.settingsStable&&evaluation.after.roi>=RULES.stableRoi){s.goodSettings.push({at:o.end,roi:o.roi,actualRoi:evaluation.after.roi,complete:true});s.goodSettings=s.goodSettings.slice(-200);}
-   s.reviews=[...(s.reviews||[]),{start:o.start,end:o.end,roi:o.roi,evaluation}].slice(-100);
-   if(evaluation.decision==='hold')s.observation={start:o.end,end:o.end+DAY,roiChangedAt:o.roiChangedAt,roi:o.roi,evaluation:null};
+   const after=await this.reader.window(plan.id,ranges.after.start,ranges.after.end);after.settingsStable=stable(after.start,after.end);after.comparisonAnchor=o.start;
+   if(!after.settingsStable)throw error('AUTOMATION_WINDOWS_NOT_COMPARABLE');
+   const totals=windowTotals(after);s.windowEvidence={ranges,after,at:this.clock()};
+   let evaluation;
+   if(totals.roi<RULES.stableRoi)evaluation={decision:'rollback',reason:'ROI_BELOW_FLOOR',before:null,after:totals,score:null};
+   else{
+    s.goodSettings=[...(s.goodSettings||[]).filter(v=>v.at!==after.end),{at:after.end,roi:o.roi,actualRoi:totals.roi,complete:true}].slice(-200);
+    try{
+     const before=await this.reader.window(plan.id,ranges.before.start,ranges.before.end);before.settingsStable=stable(before.start,before.end);before.comparisonAnchor=o.start;s.windowEvidence.before=before;
+     evaluation=evaluateWindows(before,after,this.clock());
+    }catch(e){
+     // A complete, stable, good after-window can become the next baseline;
+     // never invent a comparison against missing/mixed pre-change data.
+     s.evaluationError=e.code||e.message||'BASELINE_UNAVAILABLE';s.baselineEvents=[...(s.baselineEvents||[]),{at:this.clock(),reason:s.evaluationError,baselineStart:after.start,baselineEnd:after.end}].slice(-100);
+     s.observation={start:after.end,end:after.end+DAY,roiChangedAt:o.roiChangedAt,roi:o.roi,evaluation:null};return;
+    }
+   }
+   o.evaluation=evaluation;s.evaluationError=null;
+   s.reviews=[...(s.reviews||[]),{start:o.start,end:ranges.after.end,roi:o.roi,ranges,evaluation}].slice(-100);
+   if(evaluation.decision==='hold')s.observation={start:ranges.after.end,end:ranges.after.end+DAY,roiChangedAt:o.roiChangedAt,roi:o.roi,evaluation:null};
   }catch(e){s.evaluationError=e.code||e.message||'WINDOW_DATA_UNAVAILABLE';}
  }
+
  applyJournal(j){
   if(this.state.applied.includes(j.id))return;const s=this.planState(j.planId);
-  if(j.action.kind!=='boost')Object.assign(s,confirmedChange(s,{before:j.before,after:j.after,at:j.changedAt,source:'automation',reason:j.action.reason}));
+  if(j.action.kind!=='boost')Object.assign(s,confirmedChange(s,{before:j.before,after:j.after,at:j.changedAt,source:'automation',reason:j.action.reason,deferredRoiTarget:j.action.deferredRoiTarget,transactionId:j.id}));
   if(j.eventKey&&!s.completedEvents.includes(j.eventKey))s.completedEvents.push(j.eventKey);
   s.lastSeen={...s.lastSeen,...j.after,readAt:j.confirmedAt};s.pendingWrite=null;s.uncertainWrite=null;this.state.applied.push(j.id);this.state.pilotVerifiedAt??=j.confirmedAt;this.state.pilotPendingTx=null;
  }
@@ -69,8 +90,8 @@ export class AutomationEngine {
    if(result.complete&&matches.length===1){step.status='confirmed';step.confirmedAt=this.clock();step.taskId=matches[0].id;return true;}return false;
   }
   const plan=await this.reader.read(j.planId);if(plan[step.field]!==step.target)return false;
-  const fact=plan.history?.verified&&plan.history.facts.findLast(f=>!f.initial&&f.field===step.field&&f.before===step.before&&f.after===step.target&&f.at>=step.startedAt-2000&&f.at<=plan.readAt);
-  if(!fact)return false;step.status='confirmed';step.changedAt=fact.at;step.confirmedAt=this.clock();return true;
+  const matches=plan.history?.verified?plan.history.facts.filter(f=>!f.initial&&f.field===step.field&&f.before===step.before&&f.after===step.target&&f.at>=step.startedAt-2000&&f.at<=Math.min(plan.readAt,step.startedAt+300000)):[];
+  if(matches.length!==1)return false;const fact=matches[0];step.status='confirmed';step.changedAt=fact.at;step.confirmedAt=this.clock();return true;
  }
  async reconcile(j){
   for(const step of j.steps){if(step.status==='confirmed')continue;if(!step.startedAt)return false;try{if(!await this.verifyStep(j,step))return false;}catch{return false;}await this.saveJournal(j);}
@@ -78,7 +99,7 @@ export class AutomationEngine {
  }
  async finish(j){
   if(j.action.kind==='boost')j.after=j.before;
-  else{const p=await this.reader.read(j.planId);if(!p.history.verified||j.steps.some(v=>p[v.field]!==v.target))return false;j.after=minimal(p);j.changedAt=j.steps.find(v=>v.field==='roi')?.changedAt||j.steps.at(-1).changedAt;}
+  else{const p=await this.reader.read(j.planId);if(!p.history.verified||['roi','budget'].some(field=>p[field]!== (j.steps.find(v=>v.field===field)?.target??j.before[field])))return false;j.after=minimal(p);j.changedAt=j.steps.find(v=>v.field==='roi')?.changedAt||j.steps.at(-1).changedAt;}
   j.status='confirmed';j.confirmedAt=this.clock();await this.saveJournal(j);this.applyJournal(j);await this.save();await this.onWrite(j.planId);return true;
  }
  async execute(plan,action,eventKey,deadline){
@@ -97,13 +118,13 @@ export class AutomationEngine {
     if(step===j.steps[0]){
      this.ingest(current);if(!s.historyVerified)throw error('HISTORY_NOT_VERIFIED');
      const fresh=decide(this.config,current,{...s,pendingWrite:null,uncertainWrite:null},this.clock(),eventKey?.split(':').at(-1)||'capture');
-     if(['kind','roi','budget','duration'].some(k=>fresh[k]!==action[k]))throw error('RULE_CHANGED_BEFORE_WRITE');
+     if(['kind','roi','budget','duration','deferredRoiTarget'].some(k=>fresh[k]!==action[k]))throw error('RULE_CHANGED_BEFORE_WRITE');
     }
     prepared=await this.reader.prepare(plan.id,step.field==='task'?'task':step.field,step.field==='task'?{kind:'boost',budget:100,duration:6,name:step.name}:String(step.target));
     if(!this.config.enabled||await this.interlocked()||deadline&&this.clock()>=deadline)throw error('SLOT_EXPIRED_OR_STOPPED');
    }catch(e){j.status=j.steps.some(v=>v.status==='confirmed')?'partial':'rejected';j.error=e.code||'WRITE_REJECTED';await this.saveJournal(j);if(j.status==='rejected'){s.pendingWrite=null;s.uncertainWrite=null;if(this.state.pilotPendingTx===j.id)this.state.pilotPendingTx=null;}else s.uncertainWrite=j.id;await this.save();return j;}
    step.startedAt=this.clock();step.status='submitting';j.status='submitting';await this.saveJournal(j);
-   try{await this.reader.commit(plan.id,prepared);}catch(e){step.error=e.code||'WRITE_UNCERTAIN';}
+   try{step.writeAttempted=true;await this.reader.commit(plan.id,prepared);}catch(e){step.error=e.code||'WRITE_UNCERTAIN';step.writeAttempted=e.writeAttempted!==false;}
    let confirmed=false;for(let i=0;i<2&&!confirmed;i++){if(this.gapMs)await sleep(this.gapMs);try{confirmed=await this.verifyStep(j,step);}catch(e){step.readbackError=e.code||'READBACK_FAILED';}}
    await this.saveJournal(j);if(!confirmed){j.status='uncertain';s.uncertainWrite=j.id;await this.saveJournal(j);await this.save();return j;}
   }
@@ -120,7 +141,7 @@ export class AutomationEngine {
     let plan=await this.reader.read(id);this.scope(plan.id);if(plan.accountId!==this.accountId)throw error('ACCOUNT_MISMATCH');s.name=plan.name;this.ingest(plan);
     if(s.pendingWrite){const j=this.journal.get(s.pendingWrite);if(j&&await this.reconcile(j))messages.push(this.notifier.event(plan,'WRITE_CONFIRMED','已回读确认先前提交',j.id));else{s.lastDecision={kind:'blocked',reason:'PREVIOUS_WRITE_UNRESOLVED',at:this.clock()};messages.push(this.notifier.event(plan,s.lastDecision.reason));continue;}}
     if(!s.historyVerified){s.lastDecision={kind:'blocked',reason:'HISTORY_NOT_VERIFIED',at:this.clock()};messages.push(this.notifier.event(plan,'HISTORY_NOT_VERIFIED',s.historyError));continue;}
-    await this.evaluate(plan,s);if(plan.roi>=RULES.stableRoi&&this.reader.exactWindowsVerified!==true)messages.push(this.notifier.event(plan,'EXACT_WINDOW_PRECISION_UNVERIFIED'));if(s.evaluationError)messages.push(this.notifier.event(plan,s.evaluationError));
+    await this.evaluate(plan,s);if(plan.roi>=RULES.stableRoi&&this.config.windowMode!=='full-hour')messages.push(this.notifier.event(plan,'EXACT_WINDOW_PRECISION_UNSUPPORTED'));if(s.evaluationError)messages.push(this.notifier.event(plan,s.evaluationError));
     if(event.startsWith('boost-')||!s.lastBoostCheckedAt){const boost=await this.reader.inspectBoost(id,plan.createdAt);plan.boostState=boost.state;s.lastBoostState=boost.state;s.lastBoostCheckedAt=this.clock();}
     if(slot!==null&&this.clock()>=slot+SLOT_GRACE_MS){s.lastDecision={kind:'blocked',reason:'SLOT_EXPIRED',at:this.clock()};messages.push(this.notifier.event(plan,'SLOT_EXPIRED'));continue;}
     // Reading logs/tasks can take time; the policy receives the fresh verified read time.
@@ -136,7 +157,7 @@ export class AutomationEngine {
   }
   this.lastCycleFinishedAt=this.clock();if(allowWrites)await this.notifier.send(messages);await this.save();await this.heartbeat();return this.status();
  }
- status(){return {version:RULES.version,accountId:this.accountId,enabled:this.config.enabled===true,schedulerStarted:this.started,processId:process.pid,startedAt:this.startedAt,lastTickAt:this.state.lastTick,lastCycleStartedAt:this.lastCycleStartedAt,lastCycleFinishedAt:this.lastCycleFinishedAt,running:!!this.running,startupError:this.startupError||null,gate:this.gate.owner,phase:this.state.pilotVerifiedAt?'active':'pilot_waiting_first_eligible_action',pilotVerifiedAt:this.state.pilotVerifiedAt,pausedBy:this.interlockReason||null,waitingForConnection:!!this.waitingForConnection,windowCapability:'exact-subhour-unverified',notifications:this.notifier.status(),plans:(this.config.planIds||[]).map(id=>{const s=this.planState(id);return {id,name:s.name,...s.lastSeen,stage:s.lastSeen?.roi>=RULES.stableRoi?'stable':'cold',lastRoiChangedAt:s.lastRoiChangedAt,approvalWindow:s.approvalWindow,decision:s.lastDecision,observation:s.observation,boostPermanentlyStopped:!!s.boostPermanentlyStopped,boostHistoryVerified:!!s.boostHistoryVerified,boostState:s.lastBoostState,boostCheckedAt:s.lastBoostCheckedAt,nextEvaluationAt:this.lastCapture+300000,pendingWrite:s.pendingWrite||null};})};}
+ status(){return {version:RULES.version,accountId:this.accountId,enabled:this.config.enabled===true,schedulerStarted:this.started,processId:process.pid,startedAt:this.startedAt,lastTickAt:this.state.lastTick,lastCycleStartedAt:this.lastCycleStartedAt,lastCycleFinishedAt:this.lastCycleFinishedAt,running:!!this.running,startupError:this.startupError||null,gate:this.gate.owner,phase:this.state.pilotVerifiedAt?'active':'pilot_waiting_first_eligible_action',pilotVerifiedAt:this.state.pilotVerifiedAt,pausedBy:this.interlockReason||null,waitingForConnection:!!this.waitingForConnection,windowCapability:this.config.windowMode==='full-hour'?'complete-hour-windows':'exact-subhour-unsupported',notifications:this.notifier.status(),plans:(this.config.planIds||[]).map(id=>{const s=this.planState(id);return {id,name:s.name,...s.lastSeen,stage:s.lastSeen?.roi>=RULES.stableRoi?'stable':'cold',lastRoiChangedAt:s.lastRoiChangedAt,approvalWindow:s.approvalWindow,decision:s.lastDecision,observation:s.observation,pendingRoi:s.pendingRoi||null,boostPermanentlyStopped:!!s.boostPermanentlyStopped,boostHistoryVerified:!!s.boostHistoryVerified,boostState:s.lastBoostState,boostCheckedAt:s.lastBoostCheckedAt,nextEvaluationAt:this.lastCapture+300000,pendingWrite:s.pendingWrite||null};})};}
  heartbeat(){return atomicJson(path.join(this.directory,'status.json'),this.status());}
  kick(){this.captureRequested=true;}
  async announceStart(){

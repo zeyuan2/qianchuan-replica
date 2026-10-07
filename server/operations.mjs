@@ -47,15 +47,18 @@ export async function prepareOperation(api,q,actorId){
  return {token,expiresAt:Date.now()+90000,accountId:ACCOUNT_ID,planId:operation.id,name:ad.name,description:operation.description,before:operation.before,after:operation.after,action:q.action,canSubmit:api.allowWrites};
 }
 export async function commitOperation(api,q,actorId){
+ let action,ad;
+ try{
  if(!api.allowWrites)throw new BridgeError('当前为只读模式，未向千川提交','READONLY_MODE',409);
- const action=api.confirmations?.get(q.token);if(!action||action.expiresAt<Date.now())throw new BridgeError('确认已过期，请重新检查当前计划','CONFIRMATION_EXPIRED',409);
+ action=api.confirmations?.get(q.token);if(!action||action.expiresAt<Date.now())throw new BridgeError('确认已过期，请重新检查当前计划','CONFIRMATION_EXPIRED',409);
  if(action.actorId!==actorId)throw new BridgeError('此确认属于其他登录会话，请重新核对','CONFIRMATION_REQUIRED',403);
  if(q.accountId!==ACCOUNT_ID||q.planId!==action.id||q.confirmed!==true)throw new BridgeError('确认信息不匹配','CONFIRMATION_REQUIRED',400);
  if(action.action==='delete'&&q.typedPlanId!==action.id)throw new BridgeError('请正确输入计划ID以确认删除','CONFIRMATION_REQUIRED',400);
  api.confirmations.delete(q.token);
- let ad;try{({ad}=await planInfo(api,action.id,true));}catch(e){throw Object.assign(e,{writeAttempted:false});}
+ ({ad}=await planInfo(api,action.id,true));
  if(ad.modifyTime!==action.modifyTime)throw Object.assign(new BridgeError('计划已在其他页面变更，请重新查看后再操作','PLAN_CHANGED',409),{writeAttempted:false});
  if(action.action!=='task')buildOperation(action.action,ad,action.after);
+ }catch(error){throw Object.assign(error,{writeAttempted:false});}
  let response;try{response=await api.call(action.path,action.body,{intent:'write',reqFrom:'replica_product_confirmed_operation'});}catch(error){throw Object.assign(new BridgeError('未能确认提交结果，请先查看千川原页或操作日志，勿直接重复提交。'+error.message,'OPERATION_UNCERTAIN',502),{upstreamCode:error.code,writeAttempted:true});}
  const results=response.data?.results??[];
  if(action.action!=='task'&&(!results.length||results.some(r=>!r.flag)))throw new BridgeError(results.find(r=>!r.flag)?.error?.errorMessage||'提交结果尚未明确，请查看千川原页或操作日志后再决定是否重试','OPERATION_UNCERTAIN',502);

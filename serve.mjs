@@ -1,3 +1,4 @@
+import {AutomationRecovery} from './server/automation-recovery.mjs';
 import {ActivityGate} from './server/activity-gate.mjs';
 import {AutomationLive} from './server/automation-live.mjs';
 import {AutomationEngine} from './server/automation-engine.mjs';
@@ -41,6 +42,7 @@ const automationDirectory=fileURLToPath(new URL('./.runtime/automation/',import.
 const automationReader=new AutomationLive({api,allowedIds:approvedAutomationIds});
 const automationNotifier=await new AutomationNotifier({directory:automationDirectory,alerts:budgetAlerts}).init();
 automation=await new AutomationEngine({accountId:ACCOUNT_ID,allowedIds:approvedAutomationIds,directory:automationDirectory,reader:automationReader,gate:activityGate,notifier:automationNotifier,isBusy:()=>operationBusy||Boolean(batchBoost.running)||Boolean(monitor.running),onWrite:async id=>{api.detailCache?.delete(id);detailCache.clear();ranges.invalidate();batchBoost.invalidatePlan(id);}}).init();
+const automationRecovery=new AutomationRecovery(automation);
 function cachedDetail(q){
  if(q.accountId!==ACCOUNT_ID||!api.planCache.has(String(q.id)))throw new BridgeError('计划不属于当前已采集账户','ACCOUNT_MISMATCH',400);
  if(!['data','product','aweme','material','control','detail','log'].includes(q.tab)||q.eligible)throw new BridgeError('内网只开放计划数据查询','SCOPE_DENIED',400);
@@ -142,11 +144,12 @@ const server=http.createServer(async(req,res)=>{
   if(url.pathname==='/api/bootstrap'&&req.method==='GET')return json(res,200,await api.bootstrap(url.searchParams.get('force')==='1'));
   if(url.pathname==='/api/dashboard'&&req.method==='POST')return json(res,200,await api.dashboard(await readJson(req)));
   if(url.pathname==='/api/detail'&&req.method==='POST')return json(res,200,await loadDetail(api,await readJson(req)));
+  if(url.pathname==='/api/operation/automation-history'&&req.method==='GET'){operators.require(req.headers.cookie);return json(res,200,automationRecovery.history());}
   if(url.pathname==='/api/operation/batch-scan-status'&&req.method==='GET')return json(res,200,batchBoost.scanStatus(url.searchParams.get('id'),operators.require(req.headers.cookie).id));
   if(url.pathname==='/api/operation/batch-history'&&req.method==='GET')return json(res,200,batchBoost.history(operators.require(req.headers.cookie).id));
   if(url.pathname==='/api/operation/batch-status'&&req.method==='GET')return json(res,200,batchBoost.get(url.searchParams.get('id'),operators.require(req.headers.cookie).id));
   if(url.pathname==='/api/operation/batch-cancel'&&req.method==='POST'){if(origin!==localOrigin)throw new BridgeError('请从本页面提交','ORIGIN_DENIED',403);const actor=operators.require(req.headers.cookie).id,q=await readJson(req);return json(res,200,await batchBoost.cancel(q.id,actor));}
-  if(['/api/operation/prepare','/api/operation/commit','/api/operation/materials','/api/operation/batch-prepare','/api/operation/batch-commit','/api/operation/batch-scan','/api/operation/batch-recheck'].includes(url.pathname)&&req.method==='POST'){
+  if(['/api/operation/automation-recheck','/api/operation/automation-prepare','/api/operation/automation-commit','/api/operation/prepare','/api/operation/commit','/api/operation/materials','/api/operation/batch-prepare','/api/operation/batch-commit','/api/operation/batch-scan','/api/operation/batch-recheck'].includes(url.pathname)&&req.method==='POST'){
    if(origin!==localOrigin)throw new BridgeError('请从本页面提交','ORIGIN_DENIED',403);
    const session=requireWriteAccess(req),q=await readJson(req);
    if(operationBusy||(batchBoost.running&&!url.pathname.endsWith('/batch-commit')))throw new BridgeError('另一项人工操作或批次正在处理中，请稍后再试','OPERATION_BUSY',409);
@@ -158,6 +161,12 @@ const server=http.createServer(async(req,res)=>{
     releaseActivity=await activityGate.acquire('manual',{priority:1,signal:pendingManual.signal,timeoutMs:20000});
     if(res.destroyed||req.aborted)throw new BridgeError('请求已取消，未开始操作','ACTIVITY_WAIT_CANCELLED',499);
     requireWriteAccess(req);
+    if(url.pathname.includes('/automation-')){
+     if(q.accountId!==ACCOUNT_ID)throw new BridgeError('账户不匹配','ACCOUNT_MISMATCH',400);
+     if(url.pathname.endsWith('/automation-recheck'))return json(res,200,await automationRecovery.review(q.id,session.id));
+     if(url.pathname.endsWith('/automation-prepare'))return json(res,200,await automationRecovery.prepare(q,session.id));
+     return json(res,200,await automationRecovery.commit(q,session.id));
+    }
     if(url.pathname.endsWith('/batch-scan'))return json(res,202,batchBoost.scan(q,session.id));
     if(url.pathname.endsWith('/batch-recheck'))return json(res,200,await batchBoost.recheck(q.id,q.planId,session.id));
     if(url.pathname.endsWith('/batch-prepare'))return json(res,200,await batchBoost.prepare(q,session.id));

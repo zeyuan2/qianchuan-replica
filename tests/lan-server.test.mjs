@@ -29,6 +29,7 @@ test('LAN operator proxy allows only named routes, rejects cross-origin writes a
   for(const origin of [undefined,'http://external.example'])assert.equal((await request('/lan-api/operation/commit',origin)).status,403);assert.equal(calls.length,0);
   const result=await request('/lan-api/operation/commit','http://127.0.0.1:8088');assert.equal(result.status,401);assert.match(result.cookie[0],/Path=\/lan-api\//);assert.equal(calls[0].endpoint,'/api/operation/commit');assert.equal(calls[0].options.headers.Origin,'http://127.0.0.1:5173');
   assert.equal((await request('/lan-api/operator/setup','http://127.0.0.1:8088')).status,405);assert.equal(calls.length,1);
+  for(const name of ['automation-recheck','automation-prepare','automation-commit']){const route='/lan-api/operation/'+name;assert.equal((await request(route,'http://external.example')).status,403);assert.equal((await request(route,'http://127.0.0.1:8088')).status,401);assert.equal(calls.at(-1).endpoint,'/api/operation/'+name);}
  }finally{await new Promise(r=>server.close(r));}
 });
 

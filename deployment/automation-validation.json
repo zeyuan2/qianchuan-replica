@@ -1,19 +1,21 @@
 {
-  "rulesVersion": "2026-10-07.2",
+  "rulesVersion": "2026-10-08.1",
   "baseCommit": "2a213946d8c2b816f59140dd59caff05c7718c9f",
-  "date": "2026-10-07",
+  "date": "2026-10-08",
   "environment": "windows-production-host",
   "node": "25.8.1",
   "tests": {
     "command": "node --test --test-concurrency=2 --test-reporter=spec tests/*.test.mjs",
-    "passed": 126,
+    "passed": 142,
     "failed": 0,
     "skipped": 0,
-    "automationPolicyTests": 15,
+    "automationPolicyTests": 17,
     "automationPreflightTests": 5,
     "data": "synthetic",
-    "automationEngineTests": 18,
-    "activityGateTests": 4
+    "automationEngineTests": 27,
+    "activityGateTests": 4,
+    "automationWindowStateTests": 3,
+    "automationRecoveryUiTests": 2
   },
   "build": {
     "command": "node scripts/build-lan.mjs",
@@ -22,8 +24,7 @@
   "realAccountWritesPerformed": false,
   "productionAutomationStarted": true,
   "unverifiedOnHost": [
-    "exact second-boundary rolling 24-hour totals: protected; stable score/explore/rollback disabled",
-    "first naturally eligible real write and readback: pilot remains gated until verified"
+    "first naturally eligible automatic write/readback and manual recovery: tested synthetically, no intentional financial test"
   ],
   "productionStartedAt": "2026-10-07T20:42:22.924+08:00",
   "productionMode": "pilot_waiting_first_eligible_action",
@@ -35,7 +36,7 @@
     "durable scheduler, shared activity gate and recovery guards",
     "existing two notification recipients accepted startup notification"
   ],
-  "lastVerifiedProcessStartedAt": "2026-10-07T23:39:49.212+08:00",
+  "lastVerifiedProcessStartedAt": "2026-10-08T03:13:27.6910000+08:00",
   "hostServiceChecks": {
     "lan": 200,
     "localPublicAuthenticationGate": 401,
@@ -49,5 +50,16 @@
     "productionFinancialTestPerformed": false
   },
   "enrollmentStart": "immediate verified evaluation; no first-midnight gate",
-  "policyUpdatedAt": "2026-10-07"
+  "policyUpdatedAt": "2026-10-08",
+  "windowVerification": {
+    "mode": "full-hour",
+    "completeDayRows": 24,
+    "subsecondOrPartialHourSupported": false,
+    "sourceObservation": "2-second range returned an entire hour of spend",
+    "selectedByUser": true
+  },
+  "budgetBeforeRoi": "allow repeated budget advances; durable per-advance tickets; strict ROI spacing; stable boundary at 3.1",
+  "manualRecovery": "single-step confirmation; uncertain submitted outcomes remain blocked",
+  "uiValidation": "offline interaction tests passed; production entry visibility verified in browser; isolated preview startup rejected by automatic approval",
+  "recoveryAuthorization": "anonymous history denied with HTTP 401"
 }
