@@ -1,18 +1,19 @@
 {
-  "rulesVersion": "2026-10-07.1",
+  "rulesVersion": "2026-10-07.2",
   "baseCommit": "2a213946d8c2b816f59140dd59caff05c7718c9f",
   "date": "2026-10-07",
   "environment": "windows-production-host",
   "node": "25.8.1",
   "tests": {
     "command": "node --test --test-concurrency=2 --test-reporter=spec tests/*.test.mjs",
-    "passed": 121,
+    "passed": 126,
     "failed": 0,
     "skipped": 0,
     "automationPolicyTests": 15,
     "automationPreflightTests": 5,
     "data": "synthetic",
-    "automationEngineTests": 17
+    "automationEngineTests": 18,
+    "activityGateTests": 4
   },
   "build": {
     "command": "node scripts/build-lan.mjs",
@@ -34,11 +35,19 @@
     "durable scheduler, shared activity gate and recovery guards",
     "existing two notification recipients accepted startup notification"
   ],
-  "lastVerifiedProcessStartedAt": "2026-10-07T20:49:11.152+08:00",
+  "lastVerifiedProcessStartedAt": "2026-10-07T23:39:49.212+08:00",
   "hostServiceChecks": {
     "lan": 200,
     "localPublicAuthenticationGate": 401,
     "tunnelReady": 200,
     "backendPriority": "AboveNormal"
-  }
+  },
+  "manualRequestWait": {
+    "maximumWaitMs": 20000,
+    "priority": "before queued background work",
+    "cancelOnClientDisconnect": true,
+    "productionFinancialTestPerformed": false
+  },
+  "enrollmentStart": "immediate verified evaluation; no first-midnight gate",
+  "policyUpdatedAt": "2026-10-07"
 }

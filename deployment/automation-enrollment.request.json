@@ -1,5 +1,5 @@
 {
-  "version": "2026-10-07.1",
+  "version": "2026-10-07.2",
   "activate": false,
   "requestedAction": "Host Codex completes integration, verifies live state, then enables only these plans under the agreed rules.",
   "timezone": "Asia/Shanghai",

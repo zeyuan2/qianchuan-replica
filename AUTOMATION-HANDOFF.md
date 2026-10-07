@@ -1,8 +1,8 @@
 # 计划自动化接入说明
 
-版本：2026-10-07.1。开发基线：2a213946d8c2b816f59140dd59caff05c7718c9f。
+版本：2026-10-07.2。开发基线：2a213946d8c2b816f59140dd59caff05c7718c9f。
 
-思维导图：[XMind 可编辑文件](docs/automation/计划自动化规则.xmind) / [PNG 预览](docs/automation/计划自动化规则.png)。图展示业务规则，执行细节以本文及配套测试为准。
+思维导图：[XMind 可编辑文件](docs/automation/计划自动化规则.xmind) / [PNG 预览](docs/automation/计划自动化规则.png)。图为初始版本；首次介入已改为入组后立即评估，旧图中的等待第一个0点已失效，以本文及配套测试为准。
 
 已在原规则模块和只读预检基础上接入主机执行器：调度、真实操作日志、共享活动锁、持久化账本、逐步写入回读和现有微信通知。详见 [主机执行器说明](deployment/HOST-RUNTIME.md)。配置默认关闭，运行测试、构建或预检不会启用自动化。精确连续24小时数据的秒级边界仍未验证，稳定期评分、探索和回调因此受保护；真实首条动作回读需等待自然符合规则的计划，不能用测试调价代替。
 
@@ -25,7 +25,8 @@
 
 ### 冷启动：设置 ROI < 3.1
 
-- 一般初始预算 300 元。从审核通过后的第一个 0 点开始按自然日计时。
+- 指定计划加入自动化后，核验实时账户、投放与审核状态及日志，立即开始按规则评估，不再等待第一个0点；首次检查沿用当前真实预算和ROI，不因入组先改成300。
+- 消耗仍取北京时间当天累计基础消耗；未达到80%、ROI修改间隔不足或状态不满足时保持等待。
 - 触发比例 = 当日累计基础消耗 ÷ 当前设置预算；比例 ≥80% 且 ROI 间隔满足时，ROI +0.2、预算 +300。
 - 若本次增加将达到或超过 3.1，则 ROI 精确设为 3.1，预算精确设为 1000 元，进入稳定期。
 - 当日累计基础消耗不因加预算而清零；冷启动自然日计时不因加预算或改 ROI 重开。
@@ -90,7 +91,7 @@ node scripts/automation-preflight.mjs --request=deployment/automation-enrollment
 
 下列为接入验收清单。执行器已实现的部分及仍受保护的精确时间窗口见 `deployment/HOST-RUNTIME.md`；生产启用证据以主机 `.runtime/automation/status.json` 为准。
 
-1. **真实字段与历史**：从详情和操作日志核实审核结果、审核通过时间、最近一次 ROI 改动、起量状态、历史同日 300→600→900。`raw.modifyTime` 会因其他修改变化，不能冒充 ROI 修改时间；无法证明历史时对应动作跳过上报。平台外手动修改也要识别，不能只监听本工作台按钮。
+1. **真实字段与历史**：从详情和操作日志核实审核结果、最近一次 ROI 改动、起量状态、历史同日 300→600→900。`raw.modifyTime` 会因其他修改变化，不能冒充 ROI 修改时间；无法证明历史时对应动作跳过上报。平台外手动修改也要识别，不能只监听本工作台按钮。
 2. **实时数据适配**：转换成下文 `plan`；每次动作前强制读取新状态。缓存完整且新鲜不能替代提交前核对。
 3. **24 小时汇总**：现有 `server/roi-hours.mjs` 可参考指标口径，但跨 ROI 修改边界的小时桶不能按比例拆分或当成完整窗口。验证真实接口是否支持精确时间区间金额汇总。若不能提供可靠窗口，保持 ROI 并报告稳定期算法尚不可执行。
 4. **持久化状态与调度**：在 `.runtime/automation/` 保存配置、每个计划状态、待执行/已执行/未知结果账本。使用原子保存；00:00、05:00、17:00 各自去重；重启恢复且不补发错过的起量。其他规则随真实数据刷新评估。跨日、暂停、重启均保留观察时钟。
@@ -104,7 +105,7 @@ node scripts/automation-preflight.mjs --request=deployment/automation-enrollment
 `decide(enrollment, plan, state, now, event)` 只输出建议；调用者必须负责调度、锁、持久化、数据证据、真实写入与通知。
 
 - `enrollment`：`version`、真实账户字符串 `accountId`、字符串数组 `planIds`。
-- `plan`：`id/accountId/source:'live'/verified:true/readAt`，`active/auditPassed`，`roi/budget/basicSpend/spendDay`，`createdAt/approvedAt`（没有审核秒级时间时，可提供主机说明中的同日审核证据 `approvalWindow`），起量检查结果 `boostState:'eligible'|'active'|'unknown'`。
+- `plan`：`id/accountId/source:'live'/verified:true/readAt`，`active/auditPassed`，`roi/budget/basicSpend/spendDay`，`createdAt`（历史 `approvedAt/approvalWindow` 可保留作证据，不作为首次介入的时间门槛），起量检查结果 `boostState:'eligible'|'active'|'unknown'`。
 - 时间数值均为 Unix 毫秒；日期为北京时间 `YYYY-MM-DD`；金额为元。
 - `state.lastRoiChangedAt`：有依据的 ROI 实际改动时间；未知不能填 0 来绕过间隔。
 - `state.observation`：`start/end/roiChangedAt/roi/evaluation`。`end=start+86400000`。保持 ROI 再观察时，`roiChangedAt` 仍为最近 ROI 修改时刻，`start/end` 推进到新的连续窗口。

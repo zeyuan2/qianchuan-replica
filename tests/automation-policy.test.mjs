@@ -36,11 +36,17 @@ test('cold threshold uses day spend and current budget with strict one-hour spac
  assert.equal(roiIntervalReady(null,now),false);
  assert.equal(spendReached(300,240),true);
 });
-test('wait for first midnight after verified approval, not plan creation',()=>{
- assert.equal(decide(enrollment,plan({approvedAt:now-HOUR}),state(),now).reason,'BEFORE_FIRST_APPROVED_MIDNIGHT');
- assert.equal(decide(enrollment,plan({approvedAt:null}),state(),now).reason,'APPROVAL_TIME_UNKNOWN');
+test('enrollment evaluates cold plans immediately without waiting for midnight or an approval timestamp',()=>{
+ for(const approvedAt of [now-1000,null,undefined]){
+  const d=decide(enrollment,plan({createdAt:now-2*HOUR,approvedAt}),state(),now);
+  assert.deepEqual(d,{kind:'roi-budget',roi:2.2,budget:600,reason:'COLD_ADVANCE'});
+ }
+ assert.equal(decide(enrollment,plan({createdAt:now-1000,approvedAt:now-1000}),state({lastRoiChangedAt:now-1000}),now).reason,'ROI_INTERVAL_NOT_READY');
+ assert.equal(decide(enrollment,plan({basicSpend:239.99,approvedAt:null}),state(),now).reason,'SPEND_BELOW_THRESHOLD');
+ assert.equal(decide(enrollment,plan({auditPassed:false,approvedAt:null}),state(),now).reason,'PLAN_PAUSED_OR_UNAPPROVED');
  assert.equal(localDay(dayStart(now)),'2026-10-07');
 });
+
 test('cold target clips to 3.1 and switches budget to exactly 1000',()=>{
  for(const roi of [2.9,2.95,3,3.09]){
   const d=decide(enrollment,plan({roi,budget:1800,basicSpend:1440}),state(),now);

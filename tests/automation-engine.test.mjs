@@ -22,9 +22,9 @@ test('complete creation and budget logs establish ROI epoch; unknown ROI text or
  const created=Date.parse('2026-10-07T16:00:00+08:00'),id=ids[0];const rows=[{id:'1',objectId:id,status:1,createTime:'2026-10-07 16:00:00',contentTitle:'新建',contentLog:['预算: 日预算300.0元','综合营销ROI目标: 2.50']},{id:'2',objectId:id,status:1,createTime:'2026-10-07 17:00:00',contentTitle:'修改',contentLog:['修改 预算: 日预算300.0元 -> 日预算500.0元']}];
  const q={id,roi:2.5,budget:500,createdAt:created,readAt:created+2*HOUR,complete:true};const h=parsePlanHistory(rows,q);assert.ok(h.verified);assert.equal(h.lastRoiChangedAt,created);assert.ok(h.boostHistoryVerified);assert.equal(parsePlanHistory(rows,{...q,roi:3}).verified,false);rows.push({id:'3',objectId:id,status:1,createTime:'2026-10-07 17:30:00',contentTitle:'修改',contentLog:['综合营销ROI目标: UNKNOWN']});assert.equal(parsePlanHistory(rows,q).verified,false);
 });
-test('same-day active observation proves only the approval day and allows the following midnight boundary',()=>{
- const created=Date.parse('2026-10-07T16:00:00+08:00'),active=created+HOUR,evidence=approvalDayEvidence(created,active);assert.ok(evidence);assert.equal(approvalDayEvidence(created,created+DAY),null);
- const plan={id:ids[0],accountId:account,source:'live',verified:true,readAt:active,active:true,auditPassed:true,roi:2.5,budget:300,basicSpend:300,spendDay:localDay(active),createdAt:created,approvalWindow:evidence};const enrollment={version:RULES.version,accountId:account,planIds:ids};assert.equal(decide(enrollment,plan,{lastRoiChangedAt:created},active).reason,'BEFORE_FIRST_APPROVED_MIDNIGHT');
+test('same-day approval evidence is retained without delaying enrollment',()=>{
+ const created=Date.parse('2026-10-07T16:00:00+08:00'),active=created+HOUR+1,evidence=approvalDayEvidence(created,active);assert.ok(evidence);assert.equal(approvalDayEvidence(created,created+DAY),null);
+ const plan={id:ids[0],accountId:account,source:'live',verified:true,readAt:active,active:true,auditPassed:true,roi:2.5,budget:300,basicSpend:300,spendDay:localDay(active),createdAt:created,approvalWindow:evidence};const enrollment={version:RULES.version,accountId:account,planIds:ids};assert.equal(decide(enrollment,plan,{lastRoiChangedAt:created},active).reason,'COLD_ADVANCE');
 });
 test('gate serializes captures, batches and automation and rejects immediate acquisition while busy',async()=>{
  const gate=new ActivityGate(),order=[];const release=gate.tryAcquire('manual');assert.equal(gate.tryAcquire('automation'),null);const job=gate.run('capture',async()=>order.push('capture'));assert.equal(gate.owner,'manual');release();await job;assert.deepEqual(order,['capture']);assert.equal(gate.owner,null);
@@ -91,4 +91,12 @@ test('startup waits up to one minute for extension reconnect without issuing rea
  await f.engine.tick();assert.equal(f.engine.waitingForConnection,true);assert.equal(f.writes.length,0);assert.equal(f.messages.length,0);
  connected=true;f.setNow(f.getNow()+5000);await f.engine.tick();assert.equal(f.engine.waitingForConnection,false);assert.equal(f.writes.length,4);
  const offline=await fixture(t);offline.args.reader.ready=()=>false;offline.args.reader.read=async()=>{throw Object.assign(Error('offline'),{code:'BRIDGE_OFFLINE'});};offline.setNow(offline.getNow()+60001);await offline.engine.tick();assert.equal(offline.writes.length,0);assert.ok(offline.messages.some(m=>m.reason==='STATE_READ_FAILED'));
+});
+
+
+test('new enrollment before midnight immediately evaluates and verifies eligible actions',async t=>{
+ const f=await fixture(t);f.setNow(Date.parse('2026-10-07T18:00:00+08:00'));
+ for(const p of f.plans.values())delete p.approvedAt;
+ await f.engine.cycle({allowWrites:true});assert.equal(f.writes.length,4);assert.ok(f.engine.state.pilotVerifiedAt);
+ assert.ok([...f.engine.journal.values()].every(j=>j.status==='confirmed'&&j.action.reason==='COLD_ADVANCE'));
 });

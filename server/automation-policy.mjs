@@ -3,7 +3,7 @@
 export const HOUR = 3600000;
 export const DAY = 24 * HOUR;
 export const RULES = Object.freeze({
-  version: '2026-10-07.1', timezone: 'Asia/Shanghai',
+  version: '2026-10-07.2', timezone: 'Asia/Shanghai',
   threshold: 0.8, stableRoi: 3.1, roiStep: 0.2,
   coldBudget: 300, coldStep: 300, stableBudget: 1000,
   stableStep: 1000, maxBudget: 10000,
@@ -105,14 +105,8 @@ export function decide(enrollment, plan, state = {}, now = Date.now(), event = '
   if (event !== 'capture') return block('UNKNOWN_EVENT');
   const roiReady = roiIntervalReady(state.lastRoiChangedAt, now);
   if (plan.roi < RULES.stableRoi) {
-    let approvalBoundary = finite(plan.approvedAt) && plan.approvedAt > 0 && plan.approvedAt <= now ? dayStart(plan.approvedAt) + DAY : null;
-    const evidence = plan.approvalWindow;
-    if (approvalBoundary === null && evidence?.source === 'created-and-observed-delivering-same-day' &&
-        finite(evidence.notBefore) && finite(evidence.notAfter) && evidence.notBefore === plan.createdAt &&
-        evidence.notAfter >= evidence.notBefore && evidence.notAfter <= now &&
-        localDay(evidence.notBefore) === localDay(evidence.notAfter)) approvalBoundary = dayStart(evidence.notAfter) + DAY;
-    if (approvalBoundary === null) return block('APPROVAL_TIME_UNKNOWN');
-    if (now < approvalBoundary) return wait('BEFORE_FIRST_APPROVED_MIDNIGHT');
+    // Enrollment begins live evaluation immediately; approval must be current,
+    // but its timestamp is not a prerequisite for entering the policy.
     if (!spendReached(plan.budget, plan.basicSpend)) return wait('SPEND_BELOW_THRESHOLD');
     if (!roiReady) return wait('ROI_INTERVAL_NOT_READY');
     const roi = Math.min(RULES.stableRoi, round(plan.roi + RULES.roiStep));

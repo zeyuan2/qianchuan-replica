@@ -149,11 +149,15 @@ const server=http.createServer(async(req,res)=>{
   if(['/api/operation/prepare','/api/operation/commit','/api/operation/materials','/api/operation/batch-prepare','/api/operation/batch-commit','/api/operation/batch-scan','/api/operation/batch-recheck'].includes(url.pathname)&&req.method==='POST'){
    if(origin!==localOrigin)throw new BridgeError('请从本页面提交','ORIGIN_DENIED',403);
    const session=requireWriteAccess(req),q=await readJson(req);
-   if(operationBusy||activityGate.owner||(batchBoost.running&&!url.pathname.endsWith('/batch-commit')))throw new BridgeError('另一项操作或批次正在处理中，请稍后再试','OPERATION_BUSY',409);
-   const releaseActivity=activityGate.tryAcquire('manual');if(!releaseActivity)throw new BridgeError('采集或操作正在运行，请稍后重试','OPERATION_BUSY',409);
-   operationBusy=true;
+   if(operationBusy||(batchBoost.running&&!url.pathname.endsWith('/batch-commit')))throw new BridgeError('另一项人工操作或批次正在处理中，请稍后再试','OPERATION_BUSY',409);
+   const pendingManual=new AbortController(),cancelPending=()=>pendingManual.abort();let releaseActivity;
+   res.once('close',cancelPending);operationBusy=true;
    try{
-    operators.require(req.headers.cookie);
+    // Reserve the manual slot before waiting. Background checks finish their
+    // current item, then yield; a disconnected request can never acquire later.
+    releaseActivity=await activityGate.acquire('manual',{priority:1,signal:pendingManual.signal,timeoutMs:20000});
+    if(res.destroyed||req.aborted)throw new BridgeError('请求已取消，未开始操作','ACTIVITY_WAIT_CANCELLED',499);
+    requireWriteAccess(req);
     if(url.pathname.endsWith('/batch-scan'))return json(res,202,batchBoost.scan(q,session.id));
     if(url.pathname.endsWith('/batch-recheck'))return json(res,200,await batchBoost.recheck(q.id,q.planId,session.id));
     if(url.pathname.endsWith('/batch-prepare'))return json(res,200,await batchBoost.prepare(q,session.id));
@@ -161,7 +165,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname.endsWith('/materials')){if(q.accountId!==ACCOUNT_ID||q.tab!=='material'||q.materialType!=='video'||q.eligible!==true)throw new BridgeError('素材查询参数无效','INVALID_QUERY',400);return json(res,200,await loadDetail(api,q));}
     if(url.pathname.endsWith('/prepare'))return json(res,200,await prepareOperation(api,q,session.id));
     let result;try{result=await commitOperation(api,q,session.id);}finally{batchBoost.invalidatePlan(q.planId);}detailCache.clear();ranges.invalidate();void monitor.run();return json(res,200,result);
-   }finally{operationBusy=false;releaseActivity();}
+   }finally{res.removeListener('close',cancelPending);operationBusy=false;releaseActivity?.();}
   }
   if(url.pathname.startsWith('/api/'))return json(res,404,{error:{code:'NOT_FOUND',message:'接口尚未实现'}});
   const pathname=decodeURIComponent(url.pathname),filename=resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
