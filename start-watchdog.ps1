@@ -20,7 +20,16 @@ if(Test-Path -LiteralPath $watchPidPath){
  if($watchExisting -and $watchExisting.CommandLine -like ('*'+$watchScript+'*')){Write-Output 'Watchdog already running.';return}
 }
 $watchShell=Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
-$watchChild=Start-Process -FilePath $watchShell -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$watchScript+'"')) -WorkingDirectory $watchRoot -WindowStyle Hidden -PassThru
+$watchManagedPath=Join-Path $watchRuntime 'watchdog-task.json'
+if(Test-Path -LiteralPath $watchManagedPath){
+ $watchManaged=Get-Content -LiteralPath $watchManagedPath -Raw | ConvertFrom-Json
+ if($watchManaged.script -ne $watchScript -or $watchManaged.taskPath -ne '\'){throw 'Managed watchdog metadata does not match this workspace.'}
+ $watchTask=Get-ScheduledTask -TaskName $watchManaged.taskName -TaskPath $watchManaged.taskPath -ErrorAction Stop
+ if(@($watchTask.Actions).Count -ne 1 -or $watchTask.Actions[0].Execute -ne $watchShell -or $watchTask.Actions[0].Arguments -notlike ('*"'+$watchScript+'"*')){throw 'Managed watchdog action mismatch.'}
+ Start-ScheduledTask -TaskName $watchManaged.taskName -TaskPath $watchManaged.taskPath
+}else{
+ $watchChild=Start-Process -FilePath $watchShell -ArgumentList @('-NoProfile','-ExecutionPolicy','Bypass','-File',('"'+$watchScript+'"')) -WorkingDirectory $watchRoot -WindowStyle Hidden -PassThru
+}
 for($watchAttempt=0;$watchAttempt -lt 20;$watchAttempt++){
  Start-Sleep -Milliseconds 250
  if(Test-Path -LiteralPath $watchPidPath){

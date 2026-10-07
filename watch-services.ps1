@@ -3,6 +3,8 @@ $ErrorActionPreference='Stop'
 $watchRoot=$PSScriptRoot
 $watchRuntime=Join-Path $watchRoot '.runtime'
 New-Item -ItemType Directory -Path $watchRuntime -Force | Out-Null
+# A scheduled trigger must respect an intentional shutdown without log churn.
+if(Test-Path -LiteralPath (Join-Path $watchRuntime 'watchdog.stop')){exit 0}
 $watchLock=$null
 try{$watchLock=[IO.File]::Open((Join-Path $watchRuntime 'watchdog.lock'),[IO.FileMode]::OpenOrCreate,[IO.FileAccess]::ReadWrite,[IO.FileShare]::None)}catch{exit 0}
 $watchHandles=@{}
