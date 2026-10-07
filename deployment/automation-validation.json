@@ -1,0 +1,30 @@
+{
+  "rulesVersion": "2026-10-07.1",
+  "baseCommit": "2a213946d8c2b816f59140dd59caff05c7718c9f",
+  "date": "2026-10-07",
+  "environment": "local-development",
+  "node": "22.23.2",
+  "tests": {
+    "command": "node --test --test-concurrency=2 --test-reporter=spec tests/*.test.mjs",
+    "passed": 104,
+    "failed": 0,
+    "skipped": 0,
+    "automationPolicyTests": 15,
+    "automationPreflightTests": 5,
+    "data": "synthetic"
+  },
+  "build": {
+    "command": "node scripts/build-lan.mjs",
+    "result": "passed"
+  },
+  "realAccountWritesPerformed": false,
+  "productionAutomationStarted": false,
+  "unverifiedOnHost": [
+    "live account and five plan identities",
+    "approval and ROI-change history",
+    "prior boost stop conditions and active tasks",
+    "exact rolling 24-hour totals",
+    "scheduler and write-journal integration",
+    "live write readback and existing WeChat recipients"
+  ]
+}

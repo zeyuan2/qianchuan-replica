@@ -1,0 +1,15 @@
+{
+  "version": "2026-10-07.1",
+  "activate": false,
+  "requestedAction": "Host Codex completes integration, verifies live state, then enables only these plans under the agreed rules.",
+  "timezone": "Asia/Shanghai",
+  "planIds": [
+    "1878379318469708",
+    "1878379243870362",
+    "1878378366330935",
+    "1878377258880140",
+    "1878374654039529"
+  ],
+  "notificationRecipients": "reuse-existing-wechat-recipients",
+  "rulesDocument": "AUTOMATION-HANDOFF.md"
+}
