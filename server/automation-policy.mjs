@@ -105,8 +105,14 @@ export function decide(enrollment, plan, state = {}, now = Date.now(), event = '
   if (event !== 'capture') return block('UNKNOWN_EVENT');
   const roiReady = roiIntervalReady(state.lastRoiChangedAt, now);
   if (plan.roi < RULES.stableRoi) {
-    if (!finite(plan.approvedAt) || plan.approvedAt <= 0 || plan.approvedAt > now) return block('APPROVAL_TIME_UNKNOWN');
-    if (now < dayStart(plan.approvedAt) + DAY) return wait('BEFORE_FIRST_APPROVED_MIDNIGHT');
+    let approvalBoundary = finite(plan.approvedAt) && plan.approvedAt > 0 && plan.approvedAt <= now ? dayStart(plan.approvedAt) + DAY : null;
+    const evidence = plan.approvalWindow;
+    if (approvalBoundary === null && evidence?.source === 'created-and-observed-delivering-same-day' &&
+        finite(evidence.notBefore) && finite(evidence.notAfter) && evidence.notBefore === plan.createdAt &&
+        evidence.notAfter >= evidence.notBefore && evidence.notAfter <= now &&
+        localDay(evidence.notBefore) === localDay(evidence.notAfter)) approvalBoundary = dayStart(evidence.notAfter) + DAY;
+    if (approvalBoundary === null) return block('APPROVAL_TIME_UNKNOWN');
+    if (now < approvalBoundary) return wait('BEFORE_FIRST_APPROVED_MIDNIGHT');
     if (!spendReached(plan.budget, plan.basicSpend)) return wait('SPEND_BELOW_THRESHOLD');
     if (!roiReady) return wait('ROI_INTERVAL_NOT_READY');
     const roi = Math.min(RULES.stableRoi, round(plan.roi + RULES.roiStep));

@@ -1,0 +1,10 @@
+{
+  "version": "2026-10-07.1",
+  "accountId": "1000000000000000",
+  "planIds": [
+    "1000000000000100"
+  ],
+  "enabled": false,
+  "timezone": "Asia/Shanghai",
+  "rulesAccepted": "AUTOMATION-HANDOFF.md"
+}

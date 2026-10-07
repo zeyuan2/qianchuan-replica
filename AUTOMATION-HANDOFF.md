@@ -4,7 +4,7 @@
 
 思维导图：[XMind 可编辑文件](docs/automation/计划自动化规则.xmind) / [PNG 预览](docs/automation/计划自动化规则.png)。图展示业务规则，执行细节以本文及配套测试为准。
 
-本次已提供纯规则模块 `server/automation-policy.mjs`、只读主机检查脚本 `scripts/automation-preflight.mjs` 和配套测试。它们尚未接入 `serve.mjs`，没有定时执行、持久化执行账本、实时日志适配或账户写入功能。运行测试、构建或检查脚本都不会启用自动化。
+已在原规则模块和只读预检基础上接入主机执行器：调度、真实操作日志、共享活动锁、持久化账本、逐步写入回读和现有微信通知。详见 [主机执行器说明](deployment/HOST-RUNTIME.md)。配置默认关闭，运行测试、构建或预检不会启用自动化。精确连续24小时数据的秒级边界仍未验证，稳定期评分、探索和回调因此受保护；真实首条动作回读需等待自然符合规则的计划，不能用测试调价代替。
 
 旧 `PACKAGE-MANIFEST.json`、`SOURCE-FINGERPRINTS.json`、`验证结果.json` 是此前源码交接的基线记录，未重写为此次自动化验收。本分支新增改动由 Git 提交及 `deployment/automation-validation.json` 标识。
 
@@ -88,7 +88,7 @@ node scripts/automation-preflight.mjs --request=deployment/automation-enrollment
 
 ## 主机端必须补齐的接入
 
-这些工作依赖真实主机的字段和状态，目前尚未完成。不能把规则模块直接当作已可运行的调度器。
+下列为接入验收清单。执行器已实现的部分及仍受保护的精确时间窗口见 `deployment/HOST-RUNTIME.md`；生产启用证据以主机 `.runtime/automation/status.json` 为准。
 
 1. **真实字段与历史**：从详情和操作日志核实审核结果、审核通过时间、最近一次 ROI 改动、起量状态、历史同日 300→600→900。`raw.modifyTime` 会因其他修改变化，不能冒充 ROI 修改时间；无法证明历史时对应动作跳过上报。平台外手动修改也要识别，不能只监听本工作台按钮。
 2. **实时数据适配**：转换成下文 `plan`；每次动作前强制读取新状态。缓存完整且新鲜不能替代提交前核对。
@@ -104,7 +104,7 @@ node scripts/automation-preflight.mjs --request=deployment/automation-enrollment
 `decide(enrollment, plan, state, now, event)` 只输出建议；调用者必须负责调度、锁、持久化、数据证据、真实写入与通知。
 
 - `enrollment`：`version`、真实账户字符串 `accountId`、字符串数组 `planIds`。
-- `plan`：`id/accountId/source:'live'/verified:true/readAt`，`active/auditPassed`，`roi/budget/basicSpend/spendDay`，`createdAt/approvedAt`，起量检查结果 `boostState:'eligible'|'active'|'unknown'`。
+- `plan`：`id/accountId/source:'live'/verified:true/readAt`，`active/auditPassed`，`roi/budget/basicSpend/spendDay`，`createdAt/approvedAt`（没有审核秒级时间时，可提供主机说明中的同日审核证据 `approvalWindow`），起量检查结果 `boostState:'eligible'|'active'|'unknown'`。
 - 时间数值均为 Unix 毫秒；日期为北京时间 `YYYY-MM-DD`；金额为元。
 - `state.lastRoiChangedAt`：有依据的 ROI 实际改动时间；未知不能填 0 来绕过间隔。
 - `state.observation`：`start/end/roiChangedAt/roi/evaluation`。`end=start+86400000`。保持 ROI 再观察时，`roiChangedAt` 仍为最近 ROI 修改时刻，`start/end` 推进到新的连续窗口。

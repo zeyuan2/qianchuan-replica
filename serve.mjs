@@ -1,3 +1,8 @@
+import {ActivityGate} from './server/activity-gate.mjs';
+import {AutomationLive} from './server/automation-live.mjs';
+import {AutomationEngine} from './server/automation-engine.mjs';
+import {AutomationNotifier} from './server/automation-notify.mjs';
+import {collectFullSnapshot} from './server/full-capture.mjs';
 import http from 'node:http';
 import {randomBytes} from 'node:crypto';
 import {execFile} from 'node:child_process';
@@ -22,14 +27,20 @@ const bridge=new BrowserBridge({token:savedConnection?.token}),api=new Qianchuan
 const localOrigin=`http://127.0.0.1:${port}`;
 const operators=await new OperatorAccess({filename:fileURLToPath(new URL('./.runtime/operators.json',import.meta.url))}).init();
 Object.defineProperty(api,'allowWrites',{get:()=>!api.replay&&operators.configured&&bridge.status().writeReady});
+const activityGate=new ActivityGate();let automation;
 let operationBusy=false;
 let pairingSwitch=false;
 function requireWriteAccess(req){const session=operators.require(req.headers.cookie);if(!api.allowWrites)throw new BridgeError('请在采集电脑重新加载1.3版千川连接扩展，然后刷新连接页','WRITE_BRIDGE_REQUIRED',409);return session;}
 const budgetAlerts=await new BudgetAlerts({directory:fileURLToPath(new URL('./.runtime/budget-alerts/',import.meta.url))}).init();
-const monitor=await new ProductMonitor({api,directory:fileURLToPath(new URL('./data/monitor/',import.meta.url)),seedFile:fileURLToPath(new URL('./data/snapshots/2026-10-01-preview.json',import.meta.url)),onSnapshot:snapshot=>budgetAlerts.run(snapshot)}).init();
+const monitor=await new ProductMonitor({api,directory:fileURLToPath(new URL('./data/monitor/',import.meta.url)),seedFile:fileURLToPath(new URL('./data/snapshots/2026-10-01-preview.json',import.meta.url)),collect:(a,q)=>activityGate.run('capture',()=>collectFullSnapshot(a,q)),onSnapshot:snapshot=>{automation?.kick();return budgetAlerts.run(snapshot);}}).init();
 const ranges=new RangeQueryService({api,monitor,directory:fileURLToPath(new URL('./data/monitor/ranges/',import.meta.url))});
 const detailCache=new Map();let detailQueue=Promise.resolve(),detailPending=0,detailWindow=Date.now(),detailCount=0;
-const batchBoost=await new BatchBoost({api,directory:fileURLToPath(new URL('./.runtime/batch-boost/',import.meta.url)),beforeRead:async()=>{if(monitor.running)await monitor.running;},isActorActive:actor=>Boolean(operators.state.sessions[actor]?.expiresAt>Date.now()),onComplete:()=>{detailCache.clear();ranges.invalidate();void monitor.run();}}).init();
+const batchBoost=await new BatchBoost({api,prepare:(...args)=>activityGate.run('batch-prepare',()=>prepareOperation(...args)),commit:(...args)=>activityGate.run('batch-write',()=>commitOperation(...args)),directory:fileURLToPath(new URL('./.runtime/batch-boost/',import.meta.url)),beforeRead:async()=>{if(monitor.running&&activityGate.owner!=='manual')await monitor.running;},isActorActive:actor=>Boolean(operators.state.sessions[actor]?.expiresAt>Date.now()),onComplete:()=>{detailCache.clear();ranges.invalidate();void monitor.run();}}).init();
+let approvedAutomationIds=[];try{const request=JSON.parse(await readFile(new URL('./deployment/automation-enrollment.request.json',import.meta.url),'utf8'));approvedAutomationIds=request.planIds;}catch{}
+const automationDirectory=fileURLToPath(new URL('./.runtime/automation/',import.meta.url));
+const automationReader=new AutomationLive({api,allowedIds:approvedAutomationIds});
+const automationNotifier=await new AutomationNotifier({directory:automationDirectory,alerts:budgetAlerts}).init();
+automation=await new AutomationEngine({accountId:ACCOUNT_ID,allowedIds:approvedAutomationIds,directory:automationDirectory,reader:automationReader,gate:activityGate,notifier:automationNotifier,isBusy:()=>operationBusy||Boolean(batchBoost.running)||Boolean(monitor.running),onWrite:async id=>{api.detailCache?.delete(id);detailCache.clear();ranges.invalidate();batchBoost.invalidatePlan(id);}}).init();
 function cachedDetail(q){
  if(q.accountId!==ACCOUNT_ID||!api.planCache.has(String(q.id)))throw new BridgeError('计划不属于当前已采集账户','ACCOUNT_MISMATCH',400);
  if(!['data','product','aweme','material','control','detail','log'].includes(q.tab)||q.eligible)throw new BridgeError('内网只开放计划数据查询','SCOPE_DENIED',400);
@@ -95,6 +106,14 @@ const server=http.createServer(async(req,res)=>{
    if(url.pathname==='/api/operator/login'){const q=await readJson(req);res.setHeader('Set-Cookie',await operators.login(q.password,String(req.headers['x-replica-client']||req.socket.remoteAddress)));return json(res,200,{authenticated:true});}
    if(url.pathname==='/api/operator/logout'){res.setHeader('Set-Cookie',await operators.logout(req.headers.cookie));return json(res,200,{authenticated:false});}
   }
+  if(url.pathname==='/api/automation/status'&&req.method==='GET')return json(res,200,automation.status());
+  if(['/api/automation/inspect','/api/automation/probe-window','/api/automation/stop'].includes(url.pathname)&&req.method==='POST'){
+   if(origin!==localOrigin)throw new BridgeError('仅本机自动化控制','ORIGIN_DENIED',403);
+   if(url.pathname.endsWith('/stop')){operators.require(req.headers.cookie);await automation.stop();return json(res,200,automation.status());}
+   if(automation.config.enabled||automation.running||operationBusy||batchBoost.running||monitor.running)throw new BridgeError('自动化或采集正在运行','AUTOMATION_BUSY',409);
+   if(url.pathname.endsWith('/inspect'))return json(res,200,await automation.inspect());
+   const release=activityGate.tryAcquire('automation-probe');if(!release)throw new BridgeError('采集或操作正在运行','OPERATION_BUSY',409);try{const q=await readJson(req);return json(res,200,await automationReader.rawWindow(q.id,q.start,q.end));}finally{release();}
+  }
   if(url.pathname==='/api/health/data'&&req.method==='GET'){const v=monitor.view();return json(res,200,{complete:v.monitor.complete,planCount:v.monitor.collected,total:v.monitor.total,fetchedAt:v.monitor.lastSuccessAt,bridgeConnected:v.monitor.bridgeConnected,captureFailed:Boolean(v.monitor.error)});}
   if(url.pathname==='/api/monitor'&&req.method==='GET'){
    if(url.searchParams.has('from')||url.searchParams.has('to'))return json(res,200,await ranges.get(url.searchParams.get('from'),url.searchParams.get('to')));
@@ -130,10 +149,10 @@ const server=http.createServer(async(req,res)=>{
   if(['/api/operation/prepare','/api/operation/commit','/api/operation/materials','/api/operation/batch-prepare','/api/operation/batch-commit','/api/operation/batch-scan','/api/operation/batch-recheck'].includes(url.pathname)&&req.method==='POST'){
    if(origin!==localOrigin)throw new BridgeError('请从本页面提交','ORIGIN_DENIED',403);
    const session=requireWriteAccess(req),q=await readJson(req);
-   if(operationBusy||(batchBoost.running&&!url.pathname.endsWith('/batch-commit')))throw new BridgeError('另一项操作或批次正在处理中，请稍后再试','OPERATION_BUSY',409);
+   if(operationBusy||activityGate.owner||(batchBoost.running&&!url.pathname.endsWith('/batch-commit')))throw new BridgeError('另一项操作或批次正在处理中，请稍后再试','OPERATION_BUSY',409);
+   const releaseActivity=activityGate.tryAcquire('manual');if(!releaseActivity)throw new BridgeError('采集或操作正在运行，请稍后重试','OPERATION_BUSY',409);
    operationBusy=true;
    try{
-    if(monitor.running)await monitor.running;
     operators.require(req.headers.cookie);
     if(url.pathname.endsWith('/batch-scan'))return json(res,202,batchBoost.scan(q,session.id));
     if(url.pathname.endsWith('/batch-recheck'))return json(res,200,await batchBoost.recheck(q.id,q.planId,session.id));
@@ -142,7 +161,7 @@ const server=http.createServer(async(req,res)=>{
     if(url.pathname.endsWith('/materials')){if(q.accountId!==ACCOUNT_ID||q.tab!=='material'||q.materialType!=='video'||q.eligible!==true)throw new BridgeError('素材查询参数无效','INVALID_QUERY',400);return json(res,200,await loadDetail(api,q));}
     if(url.pathname.endsWith('/prepare'))return json(res,200,await prepareOperation(api,q,session.id));
     let result;try{result=await commitOperation(api,q,session.id);}finally{batchBoost.invalidatePlan(q.planId);}detailCache.clear();ranges.invalidate();void monitor.run();return json(res,200,result);
-   }finally{operationBusy=false;}
+   }finally{operationBusy=false;releaseActivity();}
   }
   if(url.pathname.startsWith('/api/'))return json(res,404,{error:{code:'NOT_FOUND',message:'接口尚未实现'}});
   const pathname=decodeURIComponent(url.pathname),filename=resolve(root,'.'+(pathname==='/'?'/index.html':pathname));
@@ -155,6 +174,6 @@ server.listen(port,'127.0.0.1',async()=>{
  await mkdir(new URL('./.runtime/',import.meta.url),{recursive:true});
  await writeFile(new URL('./.runtime/connection.json',import.meta.url),JSON.stringify({url:localOrigin,token:bridge.token,accountId:ACCOUNT_ID}));
  console.log(`千川商品复刻：${localOrigin}（${api.replay?'历史样本模式':'真实接口模式'}）`);
- if(!api.replay)monitor.start();
+ if(!api.replay){monitor.start();automation.start();}
 });
-for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{monitor.stop();bridge.close();server.close(()=>process.exit());});
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>{monitor.stop();if(automation?.timer)clearInterval(automation.timer);bridge.close();server.close(()=>process.exit());});
