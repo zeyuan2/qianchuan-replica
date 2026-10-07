@@ -3,3 +3,5 @@
 .task-dialog{width:760px;max-height:92vh;overflow:auto}.task-dialog select{width:100%;padding:10px;margin:8px 0}.task-video{display:flex;align-items:flex-start;gap:10px;padding:10px;border-bottom:1px solid #e3e8f0}.task-video input{width:auto;margin:5px 0}.task-video small{display:block;color:#7a8798}.task-video span{overflow-wrap:anywhere}.operation-form small{color:#707c91}
 
 .readonly-notice{padding:10px 14px;background:#eef4ff;color:#35517a;border-radius:6px}.operation-dialog button:disabled{opacity:.55;cursor:default}
+
+.table-scroll table th[data-col="create_time"],.table-scroll table td[data-col="create_time"]{min-width:174px;white-space:nowrap;font-variant-numeric:tabular-nums}

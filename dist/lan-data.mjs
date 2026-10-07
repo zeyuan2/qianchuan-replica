@@ -1,3 +1,4 @@
+import {planCreatedSeconds} from './plan-time.mjs';
 const norm=s=>String(s).replace(/_/g,'').toLowerCase();
 export function getShanghaiDate(date=new Date()){const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Shanghai',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date).map(v=>[v.type,v.value]));return `${p.year}-${p.month}-${p.day}`;}
 export function datePreset(name,anchor=getShanghaiDate()){
@@ -22,7 +23,7 @@ export function selectSnapshot(snapshot,q){
  const events=new Map((snapshot.newPlanEvents||[]).map(e=>[e.id,e]));
  if(q.onlyNew)plans=plans.filter(p=>events.has(p.id));
  const field=q.sortField||'create_time',direction=q.sortType==='asc'?1:-1;
- const value=p=>field==='create_time'?Number(p.raw?.createTime):Number(p.metrics[norm(field)]?.value??p.metrics[norm(field)]?.Value);
+ const value=p=>field==='create_time'?planCreatedSeconds(p):Number(p.metrics[norm(field)]?.value??p.metrics[norm(field)]?.Value);
  plans.sort((a,b)=>{const av=value(a),bv=value(b);if(!Number.isFinite(av)&&!Number.isFinite(bv))return a.id.localeCompare(b.id);if(!Number.isFinite(av))return 1;if(!Number.isFinite(bv))return -1;return (av-bv)*direction||a.id.localeCompare(b.id);});
  const total=plans.length,pageSize=Math.max(1,Number(q.pageSize)||10),page=Math.max(1,Math.min(Number(q.page)||1,Math.max(1,Math.ceil(total/pageSize))));
  return {...snapshot,accountTotal:snapshot.total,cachedCount:snapshot.plans.length,plans:plans.slice((page-1)*pageSize,page*pageSize).map(p=>({...p,newEvent:events.get(p.id)||null})),total,page,pageSize,allowWrites:false,newEventCount:events.size};

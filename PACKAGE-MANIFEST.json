@@ -1,7 +1,7 @@
 {
   "algorithm": "SHA-256",
   "date": "2026-10-07",
-  "note": "Excludes itself; sanitized production branch; runtime excluded.",
+  "note": "Excludes itself; sanitized production sources with creation-time column.",
   "files": [
     {
       "path": ".gitattributes",
@@ -20,8 +20,8 @@
     },
     {
       "path": "HANDOFF-METADATA.json",
-      "bytes": 1465,
-      "sha256": "e4bac53aa1814ee4e3a415f111051d7df093dc790435495e63a1e3da70fc4a8d"
+      "bytes": 1579,
+      "sha256": "fd81b90912799f8566e289dd9be61a8c3338899b5d780b28b2ed204f03805caf"
     },
     {
       "path": "PACKAGE-EXCLUSIONS.json",
@@ -30,13 +30,13 @@
     },
     {
       "path": "README.md",
-      "bytes": 1578,
-      "sha256": "769f0d3f4ac9b826943579fda562e6c8d85ea5f21aceb87321604e1cce7d9cd2"
+      "bytes": 1792,
+      "sha256": "aafe817aeae528acf8689b542e9f01de20a3123d7f6f45ae00b82a3bc32cea00"
     },
     {
       "path": "SOURCE-FINGERPRINTS.json",
-      "bytes": 9070,
-      "sha256": "da4872aab2e6897d57e9cd004a7d29ed7cd5868fca21b0088ef56a3cf2aef14a"
+      "bytes": 9165,
+      "sha256": "da9c54d6e47d05817b85e9d0bf73ee108e2a1566e406f3508916ce86f3ecce97"
     },
     {
       "path": "bridge-extension/background.js",
@@ -150,13 +150,13 @@
     },
     {
       "path": "dist/lan-data.mjs",
-      "bytes": 4954,
-      "sha256": "45d477f885a505aceabec3549c2dc20497ec4c5dff93022ade8be52f14dc0255"
+      "bytes": 5002,
+      "sha256": "07a0fd53c0f381f1f591f8e2d05138fd06e29ca005fef04cd4eb37e8cbd73144"
     },
     {
       "path": "dist/lan-main.mjs",
-      "bytes": 29443,
-      "sha256": "19bdff2d546b276c9b5a0b74ef3a1d19fac426795dc1cdb32e1b1dfafb226dcf"
+      "bytes": 29928,
+      "sha256": "24d5c2b075243e039eef33314cea0c8e541689a7ef07e9bbe56f3d8260370a09"
     },
     {
       "path": "dist/lan-operations-ui.mjs",
@@ -185,13 +185,13 @@
     },
     {
       "path": "dist/live.css",
-      "bytes": 4499,
-      "sha256": "1895275e2fa33650d8f8395016c9307d7dc2c4e9e33168a147f98bcfbb63acea"
+      "bytes": 4666,
+      "sha256": "f3da6882df8655ca2ae3c4aa5f20e584ee93b2df579b670c60f6778959d8aee2"
     },
     {
       "path": "dist/main.mjs",
-      "bytes": 15832,
-      "sha256": "9ae2d1ec7e24dcb274ca313e3c07e38c6b79fe0328356e729d7dd14841929668"
+      "bytes": 16317,
+      "sha256": "4290d3176c66072f83594038be60f837315bc19ea186db00df461100706865df"
     },
     {
       "path": "dist/metric-config.mjs",
@@ -237,6 +237,11 @@
       "path": "dist/plan-detail.mjs",
       "bytes": 8731,
       "sha256": "22e42a7a8634ddf4fe8caae0d20a9c8a6c7e8a72a79501e505d29af1b542fed1"
+    },
+    {
+      "path": "dist/plan-time.mjs",
+      "bytes": 756,
+      "sha256": "6a06c7741bded16b2b2a7f40533a0e99182964ec7ea192a9baeb1f6685a15866"
     },
     {
       "path": "dist/poller.mjs",
@@ -330,8 +335,8 @@
     },
     {
       "path": "lan-server.mjs",
-      "bytes": 11030,
-      "sha256": "c525fb6ef287223d93a69a37fab7b0565aa3023eb75df23f5e7dcb338150a9a2"
+      "bytes": 11046,
+      "sha256": "c50be9c8e56676bae8aa75acfefcd5e819066152718cf34433fdfbb09255af61"
     },
     {
       "path": "package-lock.json",
@@ -345,8 +350,8 @@
     },
     {
       "path": "public-server.mjs",
-      "bytes": 2386,
-      "sha256": "922e42e1169caf7be60b89d04cb267bee9266de4905217c4b6da712b4b17b9ea"
+      "bytes": 2402,
+      "sha256": "bea4a1ac4fc99a944250c6b13142ead8eeddd3a542fb4510832871248c57a38e"
     },
     {
       "path": "scripts/build-lan.mjs",
@@ -574,6 +579,11 @@
       "sha256": "ea4f9cea88128c71bd02210d00bfaff380fba3e8f94ff9b99a5ea2014551ec22"
     },
     {
+      "path": "tests/plan-time.test.mjs",
+      "bytes": 1673,
+      "sha256": "ec208c255e72d958666cd9b2536ccbc45d5dd23c8fb49fe0576ecdf77cef68c7"
+    },
+    {
       "path": "tests/poller.test.mjs",
       "bytes": 2266,
       "sha256": "83a307e9269e5a9a91a7ecc5ae5aaa91bb428725a887bbf13224eb814af1b3b3"
@@ -670,8 +680,8 @@
     },
     {
       "path": "验证结果.json",
-      "bytes": 500,
-      "sha256": "c69e07d2bb81cc4433cb9e47459c0bd2cbf960061f9ec55f6d7d9bee7bd84088"
+      "bytes": 803,
+      "sha256": "b54c57602f486bc55d95f86c4eb765f4b0ffa27166ac2d8b128ec7daa2611730"
     }
   ]
 }

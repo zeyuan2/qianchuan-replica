@@ -23,3 +23,5 @@ node --test --test-concurrency=2 tests/*.test.mjs
 - [配置示例](config-examples/README.md)
 
 开发电脑默认使用人工fixtures；先完成账户占位配置，再决定是否接入真实浏览器。不要复制生产`.runtime`或同时启用同一生产账户的重复通知/操作。
+
+计划表新增“创建时间”固定信息列（北京时间），与ROI、消耗并列；点击列头切换全量匹配结果升降序，默认最新在前，缺失值最后。不增加源站采集请求。

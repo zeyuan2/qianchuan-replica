@@ -43,5 +43,7 @@
   "nodeObserved": "25.8.1",
   "npmObserved": "11.11.0",
   "unreleasedDevelopmentBranch": "development/roi-comparison",
-  "accountPlaceholder": "1000000000000000"
+  "accountPlaceholder": "1000000000000000",
+  "latestChange": "Plan creation time column with ascending/descending sorting",
+  "updatedDate": "2026-10-07"
 }

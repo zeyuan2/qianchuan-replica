@@ -2,7 +2,7 @@
   "date": "2026-10-07",
   "branch": "main",
   "tests": {
-    "passed": 82,
+    "passed": 84,
     "failed": 0,
     "command": "node --test --test-concurrency=2 tests/*.test.mjs"
   },
@@ -15,7 +15,14 @@
     "credentialPatternMatches": 0,
     "excludedRuntimeFiles": 0
   },
-  "productionSourceFilesUnchanged": 92,
+  "productionSourceFilesUnchanged": 93,
   "realAccountWrites": false,
-  "notificationsSent": false
+  "notificationsSent": false,
+  "creationTimeAcceptance": {
+    "allMatchingBeforePagination": true,
+    "productionResources": "HTTP 200",
+    "browserVisual": "Not completed: browser control connection timed out",
+    "productionTemplateExecution": "passed with isolated DOM stub",
+    "realSnapshotOrderChecked": true
+  }
 }
