@@ -2,6 +2,9 @@
 $ErrorActionPreference='Stop'
 $watchRoot=$PSScriptRoot
 $watchRuntime=Join-Path $watchRoot '.runtime'
+. (Join-Path $watchRoot 'tunnel-health.ps1')
+$watchTunnelState=$null
+try{$watchTunnelState=Get-Content -LiteralPath (Join-Path $watchRuntime 'tunnel-health-state.json') -Raw | ConvertFrom-Json}catch{}
 New-Item -ItemType Directory -Path $watchRuntime -Force | Out-Null
 # A scheduled trigger must respect an intentional shutdown without log churn.
 if(Test-Path -LiteralPath (Join-Path $watchRuntime 'watchdog.stop')){exit 0}
@@ -27,6 +30,7 @@ function Get-WatchProcess($target){
  if(-not $watchInfo){return $null}
  $watchExpected=Join-Path $watchRoot $target.file
  $watchMatches=$watchInfo.CommandLine -like ('*'+$watchExpected+'*')
+ if($target.name -eq 'tunnel'){$watchMatches=$watchMatches -and $watchInfo.ExecutablePath -eq $watchExpected -and $watchInfo.CommandLine -like ('*'+(Join-Path $watchRuntime 'tunnel-token.txt')+'*')}
  # Support older launchers using relative script names, but only with matching creation time.
  if(-not $watchMatches -and $target.name -ne 'tunnel'){
   $watchDelta=[Math]::Abs(((Get-Item -LiteralPath $watchTargetPid).LastWriteTime-$watchInfo.CreationDate).TotalSeconds)
@@ -57,13 +61,37 @@ try{
      }
     }
     $watchProcess=Get-WatchProcess $watchTarget
+    $watchTunnelHealth=$null
+    if($watchProcess -and $watchName -eq 'tunnel'){
+     $watchTunnelHealth=Get-TunnelHealth
+     $watchDecision=Get-TunnelRecoveryDecision -Previous $watchTunnelState -ProcessId $watchProcess.Id -AgeSeconds ((Get-Date)-$watchProcess.StartTime).TotalSeconds -Ready $watchTunnelHealth.ready
+     if(-not $InspectOnly){
+      $watchTunnelState=$watchDecision.state
+      $watchHealthTemp=Join-Path $watchRuntime 'tunnel-health-state.tmp'
+      [IO.File]::WriteAllText($watchHealthTemp,($watchTunnelState|ConvertTo-Json),$watchEncoding)
+      Move-Item -LiteralPath $watchHealthTemp -Destination (Join-Path $watchRuntime 'tunnel-health-state.json') -Force
+      if($watchDecision.action -eq 'restart'){
+       # Reconfirm the exact owned process immediately before stopping it.
+       $watchRecheck=Get-WatchProcess $watchTarget
+       if($watchRecheck -and $watchRecheck.Id -eq $watchProcess.Id){
+        Write-WatchEvent 'tunnel_health_restart' $watchName @{pid=$watchProcess.Id;readyConnections=$watchTunnelHealth.connections;httpStatus=$watchTunnelHealth.status;cooldownSeconds=300}
+        Stop-Process -Id $watchProcess.Id -ErrorAction Stop
+        $watchHealthy.Remove($watchName);$watchProcess=$null
+       }
+      }
+     }
+    }
     if($watchProcess){
      if($watchName -in @('web','public','lan','tunnel') -and -not $InspectOnly -and $watchProcess.PriorityClass -ne 'AboveNormal'){try{$watchProcess.PriorityClass='AboveNormal';Write-WatchEvent 'priority_applied' $watchName @{priority='AboveNormal'}}catch{if($watchLastState[$watchName] -ne 'running'){Write-WatchEvent 'priority_failed' $watchName @{code='ACCESS_OR_PROCESS_CHANGED'}}}}
      if(-not $watchHandles.ContainsKey($watchName)){$null=$watchProcess.Handle;$watchHandles[$watchName]=$watchProcess}
-     if(-not $watchHealthy.ContainsKey($watchName)){$watchHealthy[$watchName]=Get-Date}
-     if(((Get-Date)-$watchHealthy[$watchName]).TotalSeconds -gt 300){$watchAttempts[$watchName]=0}
-     $watchRows+=@{service=$watchName;state='running';pid=$watchProcess.Id;privateMB=[Math]::Round($watchProcess.PrivateMemorySize64/1MB,1)}
-     $watchLastState[$watchName]='running';continue
+     $watchActuallyHealthy=$watchName -ne 'tunnel' -or $watchTunnelHealth.ready
+     if(-not $watchActuallyHealthy){$watchHealthy.Remove($watchName)}
+     elseif(-not $watchHealthy.ContainsKey($watchName)){$watchHealthy[$watchName]=Get-Date}
+     if($watchHealthy.ContainsKey($watchName) -and ((Get-Date)-$watchHealthy[$watchName]).TotalSeconds -gt 300){$watchAttempts[$watchName]=0}
+     $watchRow=@{service=$watchName;state=if($watchActuallyHealthy){'running'}else{'disconnected'};pid=$watchProcess.Id;privateMB=[Math]::Round($watchProcess.PrivateMemorySize64/1MB,1)}
+     if($watchName -eq 'tunnel'){$watchRow.readyConnections=$watchTunnelHealth.connections;$watchRow.httpStatus=$watchTunnelHealth.status;$watchRow.recoveryAction=$watchDecision.action}
+     $watchRows+=$watchRow
+     $watchLastState[$watchName]=$watchRow.state;continue
     }
     $watchOccupied=$null
     if($watchTarget.port -gt 0){$watchOccupied=Get-NetTCPConnection -State Listen -LocalPort $watchTarget.port -ErrorAction SilentlyContinue}
