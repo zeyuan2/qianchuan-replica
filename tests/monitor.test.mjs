@@ -86,3 +86,26 @@ test('local pairing survives service restart and invalid stored tokens are repla
 test('monitor date switches at Shanghai midnight, independently of the computer locale',()=>{
  assert.equal(getShanghaiDate(new Date('2026-10-01T15:59:59Z')),'2026-10-01');assert.equal(getShanghaiDate(new Date('2026-10-01T16:00:00Z')),'2026-10-02');
 });
+
+test('new-plan discovery events leave the latest snapshot after the retention window',async t=>{
+ const directory=await fs.mkdtemp(path.join(os.tmpdir(),'qc-monitor-test-'));t.after(()=>cleanup(directory));
+ let now=Date.parse('2026-10-01T11:00:00Z'),ids=[1];
+ const api={bridge:{status:()=>({connected:true})},planCache:new Map()},clock=()=>now;
+ const collect=async()=>snapshot(ids,now);
+ const monitor=await new ProductMonitor({api,directory,clock,timers:timers(),collect}).init();monitor.start();await monitor.run();
+ now+=300000;ids=[1,2];await monitor.run();assert.deepEqual(monitor.packet.events.map(e=>e.id),[id(2)]);
+ now+=8*86400000;await monitor.run();assert.deepEqual(monitor.packet.events,[]);assert.deepEqual(monitor.view().snapshot.newPlanEvents,[]);
+ const persisted=JSON.parse(await fs.readFile(path.join(directory,'latest.json'),'utf8'));assert.deepEqual(persisted.events,[]);
+ monitor.stop();
+});
+test('saved daily archives are reused within the cache window and reloaded after it',async t=>{
+ const directory=await fs.mkdtemp(path.join(os.tmpdir(),'qc-monitor-test-'));t.after(()=>cleanup(directory));
+ let now=Date.parse('2026-10-02T03:00:00Z');
+ const clock=()=>now,api={bridge:{status:()=>({connected:false})},planCache:new Map()};
+ const monitor=await new ProductMonitor({api,directory,clock,timers:timers(),collect:async()=>snapshot([1],now)}).init();
+ await fs.mkdir(path.join(directory,'daily'),{recursive:true});
+ const writeArchive=async total=>{const saved=snapshot([],now);saved.from='2026-10-01';saved.to='2026-10-01';saved.total=total;await fs.writeFile(path.join(directory,'daily','2026-10-01.json'),JSON.stringify({accountId:ACCOUNT_ID,snapshot:saved,events:[]}));};
+ await writeArchive(1);const first=await monitor.forDate('2026-10-01');assert.equal(first.snapshot.total,1);assert.equal(first.historical,true);
+ await writeArchive(2);assert.equal((await monitor.forDate('2026-10-01')).snapshot.total,1);
+ now+=301000;assert.equal((await monitor.forDate('2026-10-01')).snapshot.total,2);
+});

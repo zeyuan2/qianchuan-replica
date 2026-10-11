@@ -5,6 +5,10 @@ import {ACCOUNT_ID,today} from './api.mjs';
 import {collectFullSnapshot} from './full-capture.mjs';
 
 export const COLLECTION_INTERVAL_MS=300000;
+// New-plan discovery events only matter for the 24h highlight; keep a week for
+// context in latest.json while per-day history stays in the daily archives.
+export const EVENT_RETENTION_MS=7*86400000;
+export const ARCHIVE_CACHE_TTL_MS=300000;
 export async function atomicJson(filename,value){
  await fs.mkdir(path.dirname(filename),{recursive:true});const tmp=filename+'.'+randomUUID()+'.tmp';
  try{await fs.writeFile(tmp,JSON.stringify(value),'utf8');await fs.rename(tmp,filename);}catch(e){await fs.unlink(tmp).catch(()=>{});throw e;}
@@ -12,10 +16,10 @@ export async function atomicJson(filename,value){
 
 export class ProductMonitor {
  constructor({api,directory,seedFile,collect=collectFullSnapshot,clock=Date.now,timers=globalThis,interval=COLLECTION_INTERVAL_MS,onSnapshot=async()=>{}}){
-  Object.assign(this,{api,directory,seedFile,collect,clock,timers,interval,onSnapshot});this.packet=null;this.running=null;this.stopped=true;this.timer=null;this.attempts=[];this.status={phase:'waiting',lastAttemptAt:null,lastSuccessAt:null,nextCaptureAt:null,error:null,progress:null};
+  Object.assign(this,{api,directory,seedFile,collect,clock,timers,interval,onSnapshot});this.packet=null;this.running=null;this.stopped=true;this.timer=null;this.attempts=[];this.dailyCache=new Map();this.status={phase:'waiting',lastAttemptAt:null,lastSuccessAt:null,nextCaptureAt:null,error:null,progress:null};
  }
  async init(){
-  try{const saved=JSON.parse(await fs.readFile(path.join(this.directory,'latest.json'),'utf8'));if(saved.accountId!==ACCOUNT_ID||!saved.snapshot?.complete)throw new Error('Invalid saved account');this.packet=saved;this.status.lastSuccessAt=saved.snapshot.fetchedAt;}catch(e){if(e.code!=='ENOENT')this.status.error={code:'SAVED_DATA_ERROR',message:'上次数据文件无法使用，将重新完整采集'};}
+  try{const saved=JSON.parse(await fs.readFile(path.join(this.directory,'latest.json'),'utf8'));if(saved.accountId!==ACCOUNT_ID||!saved.snapshot?.complete)throw new Error('Invalid saved account');saved.events=(saved.events||[]).filter(e=>this.clock()-Date.parse(e.detectedAt)<EVENT_RETENTION_MS);this.packet=saved;this.status.lastSuccessAt=saved.snapshot.fetchedAt;}catch(e){if(e.code!=='ENOENT')this.status.error={code:'SAVED_DATA_ERROR',message:'上次数据文件无法使用，将重新完整采集'};}
   if(!this.packet&&this.seedFile){try{const seed=JSON.parse(await fs.readFile(this.seedFile,'utf8'));if(seed.accountId===ACCOUNT_ID){seed.complete=false;seed.source='recorded';seed.total=seed.originalTotal??seed.total;this.packet={accountId:ACCOUNT_ID,snapshot:seed,seen:{},events:[],baselineEstablished:false};}}catch{}}
   for(const p of this.packet?.snapshot?.plans||[])this.api.planCache.set(p.id,p);
   return this;
@@ -34,7 +38,7 @@ export class ProductMonitor {
    this.status.phase='collecting'; // Keep the last failure until a complete capture actually succeeds.
    const snapshot=await this.collect(this.api,{day:attempt.day,onProgress:p=>this.status.progress=p});
    if(!snapshot.complete||snapshot.accountId!==ACCOUNT_ID||snapshot.plans.length!==snapshot.total||new Set(snapshot.plans.map(p=>p.id)).size!==snapshot.total)throw Object.assign(new Error('采集结果未完整，拒绝覆盖上次数据'),{code:'INCOMPLETE_CAPTURE'});
-   const established=Boolean(this.packet?.baselineEstablished),seen={...(this.packet?.seen||{})},events=[...(this.packet?.events||[])];
+   const established=Boolean(this.packet?.baselineEstablished),seen={...(this.packet?.seen||{})},events=[...(this.packet?.events||[])].filter(e=>begin-Date.parse(e.detectedAt)<EVENT_RETENTION_MS);
    const since=Date.parse(this.packet?.snapshot?.startedAt||this.packet?.snapshot?.fetchedAt||snapshot.startedAt);
    for(const plan of snapshot.plans){if(!Object.hasOwn(seen,plan.id)){
     seen[plan.id]={firstSeenAt:snapshot.fetchedAt,createdAt:Number(plan.raw?.createTime)||null};
@@ -58,7 +62,11 @@ export class ProductMonitor {
  async forDate(day){
   if(!day||day===this.packet?.snapshot?.from)return this.view();
   if(!/^\d{4}-\d{2}-\d{2}$/.test(day))throw Object.assign(new Error('日期无效'),{status:400});
-  try{const saved=JSON.parse(await fs.readFile(path.join(this.directory,'daily',day+'.json'),'utf8'));if(saved.accountId!==ACCOUNT_ID||!saved.snapshot?.complete)throw new Error('Invalid archive');return {...this.view(),snapshot:{...saved.snapshot,newPlanEvents:saved.events||[]},historical:true};}
+  try{
+   let entry=this.dailyCache.get(day);
+   if(!entry||this.clock()-entry.at>ARCHIVE_CACHE_TTL_MS){const saved=JSON.parse(await fs.readFile(path.join(this.directory,'daily',day+'.json'),'utf8'));if(saved.accountId!==ACCOUNT_ID||!saved.snapshot?.complete)throw new Error('Invalid archive');entry={at:this.clock(),saved};this.dailyCache.set(day,entry);if(this.dailyCache.size>16)this.dailyCache.delete(this.dailyCache.keys().next().value);}
+   return {...this.view(),snapshot:{...entry.saved.snapshot,newPlanEvents:entry.saved.events||[]},historical:true};
+  }
   catch{throw Object.assign(new Error('该日期尚无完整采集记录'),{status:404,code:'DATE_NOT_CAPTURED'});}
  }
 }
