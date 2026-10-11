@@ -22,6 +22,11 @@ function Write-WatchEvent($kind,$name,$detail){
  $watchEvent=@{time=[DateTimeOffset]::Now.ToString('o');event=$kind;service=$name;detail=$detail}|ConvertTo-Json -Compress -Depth 4
  [IO.File]::AppendAllText($watchEventPath,$watchEvent+[Environment]::NewLine,$watchEncoding)
 }
+function Get-WatchListeningPorts {
+ $watchPorts=@{}
+ try{foreach($watchEndpoint in [System.Net.NetworkInformation.IPGlobalProperties]::GetIPGlobalProperties().GetActiveTcpListeners()){$watchPorts[[int]$watchEndpoint.Port]=$true}}catch{return $null}
+ return $watchPorts
+}
 function Get-WatchProcess($target){
  $watchTargetPid=Join-Path $watchRuntime ($target.name+'.pid')
  if(-not(Test-Path -LiteralPath $watchTargetPid)){return $null}
@@ -45,6 +50,8 @@ try{
   try{
    if(Test-Path -LiteralPath (Join-Path $watchRuntime 'watchdog.stop')){break}
    if(Test-Path -LiteralPath (Join-Path $watchRuntime 'watchdog.pause')){if($Once){break};Start-Sleep -Seconds $IntervalSeconds;continue}
+   # One listening-socket snapshot per cycle replaces repeated per-service cmdlet calls.
+   $script:watchListening=$null
    $watchConfig=Get-Content -LiteralPath (Join-Path $watchRuntime 'watchdog-config.json') -Raw | ConvertFrom-Json
    $watchTargets=@(@{name='web';port=5173;file='serve.mjs';launcher='start-web.ps1'},@{name='health';port=0;file='server\health-recorder.mjs';launcher='start-health.ps1'})
    if($watchConfig.public){$watchTargets+=@{name='public';port=8090;file='public-server.mjs';launcher='start-public.ps1'};$watchTargets+=@{name='tunnel';port=20245;file='.runtime\cloudflared.exe';launcher='start-public.ps1'}}
@@ -93,8 +100,8 @@ try{
      $watchRows+=$watchRow
      $watchLastState[$watchName]=$watchRow.state;continue
     }
-    $watchOccupied=$null
-    if($watchTarget.port -gt 0){$watchOccupied=Get-NetTCPConnection -State Listen -LocalPort $watchTarget.port -ErrorAction SilentlyContinue}
+    $watchOccupied=$false
+    if($watchTarget.port -gt 0){if($null -eq $script:watchListening){$script:watchListening=Get-WatchListeningPorts};if($script:watchListening){$watchOccupied=$script:watchListening.ContainsKey([int]$watchTarget.port)}}
     if($watchOccupied){
      if(-not $InspectOnly -and $watchLastState[$watchName] -ne 'occupied'){Write-WatchEvent 'port_occupied_no_action' $watchName @{port=$watchTarget.port}}
      $watchRows+=@{service=$watchName;state='occupied';port=$watchTarget.port};$watchLastState[$watchName]='occupied';continue
