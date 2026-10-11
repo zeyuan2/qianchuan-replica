@@ -13,6 +13,7 @@ import {validateMetricSelection} from './metric-config.mjs';
 import {openPlanDetail} from './lan-plan-detail.mjs';
 import {openPlanOperation} from './lan-operations-ui.mjs';
 import {migratePreferences} from './preferences.mjs';
+import {tableRenderKey} from './render-state.mjs';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const normalize=s=>String(s).replace(/_/g,'').toLowerCase();
@@ -24,7 +25,8 @@ $('#date-from').value=today;$('#date-to').value=today;$('#date-from').max=today;
 let configs={top:TOP_METRIC_CONFIG,table:TABLE_METRIC_CONFIG},loadedConfig=false,selectedTop=[],selectedTable=[];
 let model={source:'none',plans:[],metrics:[],total:0,totals:{metrics:{}}};
 let query={accountId:ACCOUNT_ID,page:1,pageSize:10,product:'selected',search:'',searchOption:1,status:'all',sortField:'create_time',sortType:'desc'};
-let selectedPlans=new Set(),busy=false,toastTimer,lastCycleSeen=null,monitorTick,rangeMode="today",rangeDraftDirty=false,appliedRange=datePreset("today");
+let selectedPlans=new Set(),busy=false,toastTimer,lastCycleSeen=null,monitorTick,rangeMode="today",rangeDraftDirty=false,appliedRange=datePreset("today");let tableKey=null;
+function renderIfChanged(){const key=tableRenderKey(model,query,selectedTop,selectedTable);if(key===tableKey)return;tableKey=key;renderMetrics();renderTable();}
 $('#search-type').innerHTML='<option value="all">计划</option>';
 $('#status').innerHTML='<option value="all">请筛选计划状态</option>'+[[13,'投放中'],[2,'新建审核中'],[15,'修改审核中'],[16,'审核不通过'],[4,'手动暂停'],[11,'计划预算不足'],[22,'账户预算已花光'],[10,'账户余额不足'],[23,'系统暂停'],[14,'不在投放时段'],[6,'未到投放时间'],[24,'在投计划配额超限'],[19,'商品暂不可用'],[1,'已删除'],[3,'已完成'],[30,'全部（包含已删除）'],[21,'已终止']].map(([v,n])=>`<option value="${v}">${n}</option>`).join('');
 $('#service').innerHTML='<option value="all">选择营销服务项</option><option value="3">基础投放</option><option value="1">千川星选素材投放</option><option value="2">含达人佣金出价</option>';
@@ -59,7 +61,7 @@ async function planAction(action,id){const p=model.plans.find(p=>p.id===id);if(!
 const poller=createPoller({load:loadLanData,interval:15000,
  query:()=>({...query,...getAppliedRange(),...(loadedConfig?{topMetrics:selectedTop,tableMetrics:selectedTable}:{})}),
  onLoading(value){busy=value;showRangeLoading(value);$('#refresh').disabled=value;$('#refresh').classList.toggle('loading',value);if(value&&model.source==='none')$('#source-status').textContent='正在读取采集结果…';renderPager();},
- onData(data){window.QCHealth?.ready(data.fetchedAt);const first=!loadedConfig;configs={top:data.topConfig,table:data.tableConfig};if(first){selectedTop=selection('top');selectedTable=selection('table');loadedConfig=true;}model=data;query.page=data.page;renderMonitor();renderMetrics();renderTable();$('#source-status').textContent=`账户 ${ACCOUNT_ID} · ${data.complete?'真实接口 · 完整采集':'待补齐的历史样本'} · ${data.allowWrites?'已允许真实操作':'只读模式'} · 数据日期 ${data.from} 至 ${data.to}`;$('#updated').textContent=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(data.fetchedAt))+' 更新';$('#last-success').textContent=data.fetchedAt;$('#last-success').dataset.timestamp=data.fetchedAt;updateInterfaceStatus(data);showAppliedRange(data);if(first&&(JSON.stringify(selectedTop)!==JSON.stringify(configs.top.selected)||JSON.stringify(selectedTable)!==JSON.stringify(configs.table.selected)))queueMicrotask(()=>poller.invalidate());},
+ onData(data){window.QCHealth?.ready(data.fetchedAt);const first=!loadedConfig;configs={top:data.topConfig,table:data.tableConfig};if(first){selectedTop=selection('top');selectedTable=selection('table');loadedConfig=true;}model=data;query.page=data.page;renderMonitor();renderIfChanged();$('#source-status').textContent=`账户 ${ACCOUNT_ID} · ${data.complete?'真实接口 · 完整采集':'待补齐的历史样本'} · ${data.allowWrites?'已允许真实操作':'只读模式'} · 数据日期 ${data.from} 至 ${data.to}`;$('#updated').textContent=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).format(new Date(data.fetchedAt))+' 更新';$('#last-success').textContent=data.fetchedAt;$('#last-success').dataset.timestamp=data.fetchedAt;updateInterfaceStatus(data);showAppliedRange(data);if(first&&(JSON.stringify(selectedTop)!==JSON.stringify(configs.top.selected)||JSON.stringify(selectedTable)!==JSON.stringify(configs.table.selected)))queueMicrotask(()=>poller.invalidate());},
  onError(error){window.QCHealth?.failure('snapshot','network');showInterfaceError(error);const prefix=model.source==='none'?'尚未取得数据':'更新失败，已保留上次数据';$('#source-status').textContent=prefix+' · '+(error.code==='AUTH_REQUIRED'?'登录失效，请在原千川页重新登录':error.message);},
 });
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;
