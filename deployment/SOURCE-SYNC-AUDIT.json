@@ -1,0 +1,20 @@
+{
+  "checkedDate": "2026-10-12",
+  "timezone": "Asia/Shanghai",
+  "repository": "https://github.com/zeyuan2/qianchuan-replica",
+  "checkedCodeCommit": "16b7e56d4d9373dadff50acf9117b26f79a4e219",
+  "productionFunctionalityMatchesSanitizedSource": true,
+  "differences": [
+    "authorized account/domain/LAN/contact/tenant placeholders",
+    "request session and plan identifiers removed",
+    "recorded fixtures replaced by synthetic fixtures",
+    "historical screenshots and offline data excluded"
+  ],
+  "untrackedProductionProgramChanges": false,
+  "productionAutomationEnabled": false,
+  "productionServicesModified": false,
+  "dataIncluded": false,
+  "secretsIncluded": false,
+  "programFilesCompared": 90,
+  "unresolvedProgramDifferences": []
+}

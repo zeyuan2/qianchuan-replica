@@ -6,7 +6,7 @@
   "repository": "https://github.com/zeyuan2/qianchuan-replica",
   "branch": "main",
   "basis": "Sanitized snapshot of current production source plus applicable synthetic tests and handoff tools",
-  "productionFiles": 92,
+  "productionFiles": 95,
   "sanitizedFiles": [
     "scripts/lan-interface.js",
     "bridge-extension/background.js",
@@ -44,6 +44,9 @@
   "npmObserved": "11.11.0",
   "unreleasedDevelopmentBranch": "development/roi-comparison",
   "accountPlaceholder": "1000000000000000",
-  "latestChange": "Plan creation time column with ascending/descending sorting",
-  "updatedDate": "2026-10-07"
+  "latestChange": "Automation runtime, full-hour comparison windows, deferred ROI queue, manual recovery and Windows/tunnel supervision",
+  "updatedDate": "2026-10-12",
+  "automationRulesVersion": "2026-10-08.1",
+  "productionAutomationEnabled": false,
+  "sourceFingerprintDate": "2026-10-12"
 }
