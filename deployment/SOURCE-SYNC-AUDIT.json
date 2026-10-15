@@ -1,8 +1,8 @@
 {
-  "checkedDate": "2026-10-12",
+  "checkedDate": "2026-10-15",
   "timezone": "Asia/Shanghai",
   "repository": "https://github.com/zeyuan2/qianchuan-replica",
-  "checkedCodeCommit": "16b7e56d4d9373dadff50acf9117b26f79a4e219",
+  "checkedCodeCommit": "d919b512f1c15259d5bf459cfa1deef6776f6503",
   "productionFunctionalityMatchesSanitizedSource": true,
   "differences": [
     "authorized account/domain/LAN/contact/tenant placeholders",
@@ -15,6 +15,11 @@
   "productionServicesModified": false,
   "dataIncluded": false,
   "secretsIncluded": false,
-  "programFilesCompared": 90,
-  "unresolvedProgramDifferences": []
+  "programFilesCompared": 93,
+  "unresolvedProgramDifferences": [],
+  "validation": {
+    "testsPassed": 165,
+    "testsFailed": 0,
+    "lanBuild": "passed"
+  }
 }
